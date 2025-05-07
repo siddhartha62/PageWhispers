@@ -1,0 +1,457 @@
+﻿@using Microsoft.AspNetCore.Identity
+@using Microsoft.EntityFrameworkCore
+@inject SignInManager<BookHive.Models.ApplicationUser> SignInManager
+@inject UserManager<BookHive.Models.ApplicationUser> UserManager
+@inject BookHive.Data.ApplicationDbContext _context
+
+@{
+    var user = await UserManager.GetUserAsync(User);
+    bool isAdmin = user != null && await UserManager.IsInRoleAsync(user, "Admin");
+    bool isStaff = user != null && await UserManager.IsInRoleAsync(user, "Staff");
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewData["Title"]</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.1/signalr.min.js"></script>
+    <style>
+        body {
+            font-family: 'Open Sans', sans-serif;
+            background: #f5f5f5;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        h1, h2, h3 {
+            font-family: 'Merriweather', serif;
+        }
+
+        .sidebar {
+            background: rgba(45, 55, 72, 0.95);
+            width: 280px;
+            height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 1000;
+            transition: transform 0.3s ease;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.3);
+            border-right: 1px solid rgba(255, 255, 255, 0.15);
+        }
+
+            .sidebar.collapsed {
+                transform: translateX(-280px);
+            }
+
+        .main-content {
+            margin-left: 280px;
+            transition: margin-left 0.3s ease;
+        }
+
+            .main-content.collapsed {
+                margin-left: 0;
+            }
+
+        .sidebar-toggler {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            z-index: 1001;
+            display: none;
+            background: #14b8a6;
+            border: none;
+            padding: 8px;
+            border-radius: 50%;
+            color: white;
+            transition: background 0.3s ease;
+        }
+
+            .sidebar-toggler:hover {
+                background: #15d1bb;
+            }
+
+        .navbar-brand {
+            font-family: 'Merriweather', serif;
+            font-size: 1.75rem;
+            color: #ffffff !important;
+            transition: color 0.3s ease;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+            letter-spacing: 1px; /* Ensure proper spacing between words */
+        }
+
+            .navbar-brand:hover {
+                color: #14b8a6 !important;
+            }
+
+            .navbar-brand i {
+                color: #14b8a6;
+                transition: color 0.3s ease;
+            }
+
+            .navbar-brand:hover i {
+                color: #15d1bb;
+            }
+
+        .nav-link {
+            color: #ffffff !important;
+            transition: color 0.3s ease, background 0.3s ease;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+        }
+
+            .nav-link:hover {
+                color: #14b8a6 !important;
+                background: rgba(255, 255, 255, 0.05);
+            }
+
+            .nav-link.active {
+                color: #14b8a6 !important;
+                background: rgba(255, 255, 255, 0.05);
+            }
+
+            .nav-link i {
+                color: #14b8a6;
+                transition: color 0.3s ease;
+            }
+
+            .nav-link:hover i {
+                color: #15d1bb;
+            }
+
+        .search-bar {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 20px;
+            padding: 0.5rem 1rem;
+            display: flex;
+            align-items: center;
+            width: 100%;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+            .search-bar input {
+                flex: 1;
+                border: none;
+                outline: none;
+                font-size: 0.875rem;
+                color: #ffffff !important;
+                background: transparent;
+                text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+            }
+
+                .search-bar input::placeholder {
+                    color: rgba(255, 255, 255, 0.5);
+                }
+
+            .search-bar button {
+                background: none;
+                border: none;
+                cursor: pointer;
+                padding: 0;
+            }
+
+            .search-bar .bi-search {
+                font-size: 1rem;
+                color: #14b8a6;
+                transition: color 0.3s ease;
+            }
+
+                .search-bar .bi-search:hover {
+                    color: #15d1bb;
+                }
+
+        #notification-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            display: none;
+            padding: 10px 20px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            border-radius: 5px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: opacity 0.5s ease-in-out;
+        }
+
+        #announcement-notice {
+            padding: 0;
+            background: none;
+            max-width: 300px;
+            text-align: center;
+        }
+
+        #notice-field {
+            display: block;
+            padding: 5px 10px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            border-radius: 5px;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+            #notice-field .message {
+                display: block;
+                margin-bottom: 5px;
+            }
+
+        .user-info {
+            color: #ffffff !important;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+        }
+
+            .user-info img,
+            .user-info .avatar-placeholder {
+                width: 32px;
+                height: 32px;
+                border-radius: 50%;
+                margin-right: 8px;
+            }
+
+            .user-info .avatar-placeholder {
+                background: rgba(255, 255, 255, 0.2);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: white;
+                font-size: 0.75rem;
+            }
+
+        .dropdown-menu {
+            background: #293548;
+            border: none;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .dropdown-item {
+            color: white;
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+
+            .dropdown-item:hover {
+                background: #3b4a66;
+                color: #14b8a6;
+            }
+
+        footer {
+            background: #1e293b;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        @@media (max-width: 991px) {
+            .sidebar {
+                transform: translateX(-280px);
+            }
+
+                .sidebar.collapsed {
+                    transform: translateX(0);
+                }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+                .main-content.collapsed {
+                    margin-left: 280px;
+                }
+
+            .sidebar-toggler {
+                display: block;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="notification-container"></div>
+
+    <!-- Sidebar Toggle Button for Mobile -->
+    <button class="sidebar-toggler d-lg-none" type="button">
+        <i class="bi bi-list"></i>
+    </button>
+
+    <!-- Sidebar -->
+    <nav class="sidebar">
+        <div class="container-fluid py-4">
+            <a asp-controller="Home" asp-action="Index" class="navbar-brand mb-5">
+                <i class="bi bi-book me-2"></i>Page&nbsp;Whispers
+            </a>
+            <div class="mb-5">
+                <form asp-controller="Books" asp-action="Index" method="get" class="search-bar">
+                    <input type="text" name="search" placeholder="Search on Page Whispers..." />
+                    <button type="submit">
+                        <i class="bi bi-search"></i>
+                    </button>
+                </form>
+            </div>
+            <ul class="navbar-nav mb-5">
+                @if (SignInManager.IsSignedIn(User))
+                {
+                    if (isAdmin)
+                    {
+                        <li class="nav-item mb-3">
+                            <a asp-controller="Admin" asp-action="Index" class="nav-link py-2 px-3 rounded @(ViewData["Title"] == "Admin Dashboard" ? "active" : "")">
+                                <i class="bi bi-speedometer2 me-2"></i>Dashboard
+                            </a>
+                        </li>
+                        <li class="nav-item mb-3">
+                            <a asp-controller="Account" asp-action="CreateStaff" class="nav-link py-2 px-3 rounded @(ViewData["Title"] == "Create Staff" ? "active" : "")">
+                                <i class="bi bi-person-plus-fill me-2"></i>Create Staff
+                            </a>
+                        </li>
+                        <li class="nav-item mb-3">
+                            <a asp-controller="Books" asp-action="Create" class="nav-link py-2 px-3 rounded @(ViewData["Title"] == "Create Book" ? "active" : "")">
+                                <i class="bi bi-book-fill me-2"></i>Add Book
+                            </a>
+                        </li>
+                    }
+                    if (isStaff)
+                    {
+                        <li class="nav-item mb-3">
+                            <a asp-controller="Staff" asp-action="FulfillOrder" class="nav-link py-2 px-3 rounded @(ViewData["Title"] == "Fulfill Order" ? "active" : "")">
+                                <i class="bi bi-box-seam me-2"></i>Orders
+                            </a>
+                        </li>
+                    }
+                }
+                <li class="nav-item mb-3">
+                    <a asp-controller="Books" asp-action="Index" class="nav-link py-2 px-3 rounded @(ViewData["Title"] == "Books" ? "active" : "")">
+                        <i class="bi bi-bookshelf me-2"></i>Books
+                    </a>
+                </li>
+                <li class="nav-item mb-3">
+                    <a asp-controller="Announcements" asp-action="Index" class="nav-link py-2 px-3 rounded @(ViewData["Title"] == "Announcements" ? "active" : "")">
+                        <i class="bi bi-megaphone-fill me-2"></i>Announcements
+                    </a>
+                </li>
+            </ul>
+            <div id="announcement-notice" class="mb-5 mx-3">
+                <div id="notice-field"></div>
+            </div>
+            @if (SignInManager.IsSignedIn(User))
+            {
+                if (!isAdmin && !isStaff)
+                {
+                    int cartCount = await _context.Carts.Where(c => c.UserId == user.Id).Select(c => c.BookId).Distinct().CountAsync();
+                    int orderCount = await _context.Orders.Where(o => o.UserId == user.Id && !o.IsCancelled && o.Status != "Received").CountAsync();
+                    <ul class="navbar-nav mb-5">
+                        <li class="nav-item mb-3">
+                            <a asp-controller="Cart" asp-action="Cart" class="nav-link py-2 px-3 rounded position-relative">
+                                <i class="bi bi-cart3 me-2"></i>Cart
+                                <span id="cart-count" class="position-absolute top-1 start-100 translate-middle badge rounded-pill bg-danger text-white" style="font-size: 0.75rem;">@cartCount</span>
+                            </a>
+                        </li>
+                        <li class="nav-item mb-3">
+                            <a asp-controller="Orders" asp-action="MyOrders" class="nav-link py-2 px-3 rounded position-relative">
+                                <i class="bi bi-box-seam me-2"></i>Orders
+                                <span id="order-count" class="position-absolute top-1 start-100 translate-middle badge rounded-pill bg-danger text-white" style="font-size: 0.75rem;">@orderCount</span>
+                            </a>
+                        </li>
+                    </ul>
+                }
+                <div class="dropdown mb-5">
+                    <a class="nav-link py-2 px-3 rounded user-info d-flex align-items-center" id="profileDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                        @if (!string.IsNullOrEmpty(user?.ProfileImageUrl))
+                        {
+                            <img src="@user.ProfileImageUrl" alt="@(user?.UserName ?? "User")" class="me-2" />
+                        }
+                        else
+                        {
+                            <div class="avatar-placeholder me-2">
+                                <span>?</span>
+                            </div>
+                        }
+                        <span>Welcome @(user?.FirstName ?? "User")</span>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end" id="profileMenu">
+                        <li><a asp-controller="Profile" asp-action="ViewProfile" class="dropdown-item">View Profile</a></li>
+                        <li><a asp-controller="Profile" asp-action="Edit" class="dropdown-item">Edit Profile</a></li>
+                        <li><a asp-controller="Profile" asp-action="ChangePassword" class="dropdown-item">Change Password</a></li>
+                        <li><a asp-controller="Account" asp-action="Logout" class="dropdown-item">Logout</a></li>
+                    </ul>
+                </div>
+            }
+            else
+            {
+                <ul class="navbar-nav mb-5">
+                    <li class="nav-item mb-3">
+                        <a asp-controller="Account" asp-action="Login" class="nav-link py-2 px-3 rounded">Login</a>
+                    </li>
+                    <li class="nav-item mb-3">
+                        <a asp-controller="Account" asp-action="Register" class="nav-link py-2 px-3 rounded">Register</a>
+                    </li>
+                </ul>
+            }
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content flex-fill">
+        <div class="container py-5">
+            @RenderBody()
+        </div>
+    </main>
+
+    <footer class="py-3">
+        <div class="container text-center text-sm">
+            <p>© 2025 Page Whispers. All rights reserved.</p>
+        </div>
+    </footer>
+
+    @Html.AntiForgeryToken()
+
+    @RenderSection("Scripts", required: false)
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    <script>
+        // Sidebar Toggle for Mobile
+        const sidebar = document.querySelector('.sidebar');
+        const mainContent = document.querySelector('.main-content');
+        const sidebarToggler = document.querySelector('.sidebar-toggler');
+        sidebarToggler.addEventListener('click', () => {
+            sidebar.classList.toggle('collapsed');
+            mainContent.classList.toggle('collapsed');
+        });
+
+        // SignalR Notification Logic
+        const connection = new signalR.HubConnectionBuilder().withUrl("/orderNotificationHub").build();
+        let timeoutId = null;
+        connection.on("ReceiveOrderNotification", (message) => {
+            const notificationContainer = document.getElementById("notification-container");
+            notificationContainer.textContent = message;
+            notificationContainer.style.display = "block";
+            notificationContainer.style.opacity = "1";
+            if (timeoutId) clearTimeout(timeoutId);
+            timeoutId = setTimeout(() => {
+                notificationContainer.style.opacity = "0";
+                setTimeout(() => notificationContainer.style.display = "none", 500);
+            }, 60000);
+        });
+        connection.on("UpdateCartCount", (count) => {
+            const cartCountElement = document.getElementById("cart-count");
+            if (cartCountElement) cartCountElement.textContent = count;
+        });
+        connection.on("UpdateOrderCount", (count) => {
+            const orderCountElement = document.getElementById("order-count");
+            if (cartCountElement) orderCountElement.textContent = count;
+        });
+        connection.start().catch(err => console.error("SignalR Connection Error: ", err));
+
+        // SignalR Announcement Notice Logic
+        const announcementConnection = new signalR.HubConnectionBuilder().withUrl("/announcementHub").build();
+        announcementConnection.on("ReceiveAnnouncement", (message) => {
+            const noticeField = document.getElementById("notice-field");
+            const messageElement = document.createElement("span");
+            messageElement.className = "message";
+            messageElement.textContent = message;
+            noticeField.appendChild(messageElement);
+            noticeField.parentElement.style.display = "block";
+        });
+        announcementConnection.start().catch(err => console.error("SignalR Announcement Connection Error: ", err));
+    </script>
+</body>
+</html>

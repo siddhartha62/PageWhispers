@@ -1,0 +1,53 @@
+﻿@model BookHive.Models.TimedAnnouncement
+
+@{
+    ViewData["Title"] = "Create Timed Announcement";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container mx-auto px-4 py-6">
+    <h2 class="text-2xl font-bold text-amber-900 mb-6 text-center">Create Timed Announcement</h2>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="bg-green-100 text-green-700 p-4 rounded-lg mb-4 text-center">
+            @TempData["SuccessMessage"]
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null || ViewData.ModelState.ErrorCount > 0)
+    {
+        <div class="bg-red-100 text-red-700 p-4 rounded-lg mb-4 text-center">
+            @if (ViewData.ModelState.ErrorCount > 0)
+            {
+                <ul>
+                    @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                    {
+                        <li>@error.ErrorMessage</li>
+                    }
+                </ul>
+            }
+            else
+            {
+                @TempData["ErrorMessage"]
+            }
+        </div>
+    }
+
+    <form asp-action="CreateTimedAnnouncement" method="post" class="bg-amber-50 rounded-lg shadow-md p-6 mb-6 max-w-lg mx-auto">
+        <div class="space-y-4">
+            <div>
+                <label for="Message" class="block text-sm font-semibold text-gray-700 mb-1">Announcement Message</label>
+                <textarea id="Message" name="Message" class="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500" rows="3" required></textarea>
+            </div>
+            <div>
+                <label for="ExpiresAt" class="block text-sm font-semibold text-gray-700 mb-1">Expiration Time</label>
+                <input type="datetime-local" id="ExpiresAt" name="ExpiresAt" class="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500" required />
+                <span class="text-xs text-gray-500">Must be in the future.</span>
+            </div>
+            <div class="flex justify-end">
+                <button type="submit" class="inline-block bg-amber-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-amber-700">Create Timed Announcement</button>
+            </div>
+        </div>
+    </form>
+</div>

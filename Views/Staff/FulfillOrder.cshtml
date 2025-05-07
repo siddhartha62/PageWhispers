@@ -1,0 +1,90 @@
+﻿@using BookHive.Controllers
+@model FulfillOrderViewModel
+
+@{
+    ViewData["Title"] = "Fulfill Order";
+}
+
+<div class="container mx-auto px-4 py-6">
+    <h2 class="text-2xl font-bold text-center text-amber-900 mb-6">Fulfill Order</h2>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="bg-green-100 text-green-700 p-2 rounded mb-4 text-center text-sm">
+            @TempData["SuccessMessage"]
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="bg-red-100 text-red-700 p-2 rounded mb-4 text-center text-sm">
+            @TempData["ErrorMessage"]
+        </div>
+    }
+
+    @if (Model.IsConfirmationStep && Model.Order != null)
+    {
+        <!-- Confirmation Step -->
+        <div class="bg-amber-50 rounded-lg shadow-md p-6 max-w-3xl mx-auto">
+            <h3 class="text-xl font-semibold text-amber-800 mb-4">Order Details</h3>
+            <div class="flex items-center mb-4">
+                @if (!string.IsNullOrEmpty(Model.Order.Book.CoverImageUrl))
+                {
+                    <img src="@Model.Order.Book.CoverImageUrl" alt="@Model.Order.Book.Title" class="w-16 h-16 object-cover rounded mr-4" />
+                }
+                else
+                {
+                    <div class="w-16 h-16 bg-gray-200 flex items-center justify-center rounded mr-4">
+                        <span class="text-sm">No Image</span>
+                    </div>
+                }
+                <div>
+                    <h4 class="text-base font-semibold text-amber-800">@Model.Order.Book.Title</h4>
+                    <p class="text-gray-600 text-sm">by @Model.Order.Book.Author</p>
+                    <p class="text-gray-600 text-sm">Ordered: @Model.Order.OrderDate.ToString("d MMM yyyy HH:mm")</p>
+                    <p class="text-gray-600 text-sm">Quantity: @Model.Order.Quantity</p>
+                    <p class="text-gray-600 text-sm">Total: $@Model.Order.TotalPrice</p>
+                    <p class="text-gray-600 text-sm">Claim Code: @Model.Order.ClaimCode</p>
+                    <p class="text-gray-600 text-sm">User ID: @Model.Order.UserId</p>
+                    <p class="text-gray-600 text-sm">User Name: @Model.Order.User.FirstName @Model.Order.User.LastName</p>
+                </div>
+            </div>
+
+            <form asp-action="ConfirmFulfillOrder" method="post" class="text-center">
+                <input type="hidden" name="claimCode" value="@Model.ClaimCode" />
+                <input type="hidden" name="userId" value="@Model.UserId" />
+                <button type="submit" class="inline-block bg-amber-600 text-white font-medium text-sm py-1.5 px-3 rounded hover:bg-amber-700">Confirm Fulfillment</button>
+                <a asp-action="FulfillOrder" class="inline-block bg-gray-500 text-white font-medium text-sm py-1.5 px-3 rounded hover:bg-gray-600 ml-2">Cancel</a>
+            </form>
+        </div>
+    }
+    else
+    {
+        <!-- Input Step -->
+        <div class="bg-amber-50 rounded-lg shadow-md p-6 max-w-lg mx-auto">
+            <form asp-action="FulfillOrder" method="post">
+                <div asp-validation-summary="ModelOnly" class="text-red-600 text-sm mb-4"></div>
+
+                <div class="mb-4">
+                    <label asp-for="ClaimCode" class="block text-gray-700 text-sm font-semibold mb-2">Claim Code</label>
+                    <input asp-for="ClaimCode" class="w-full p-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-amber-500" />
+                    <span asp-validation-for="ClaimCode" class="text-red-600 text-sm"></span>
+                </div>
+
+                <div class="mb-4">
+                    <label asp-for="UserId" class="block text-gray-700 text-sm font-semibold mb-2">User ID</label>
+                    <input asp-for="UserId" class="w-full p-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-amber-500" />
+                    <span asp-validation-for="UserId" class="text-red-600 text-sm"></span>
+                </div>
+
+                <div class="text-center">
+                    <button type="submit" class="inline-block bg-amber-600 text-white font-medium text-sm py-1.5 px-3 rounded hover:bg-amber-700">Look Up Order</button>
+                </div>
+            </form>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -1,0 +1,89 @@
+﻿@model BookHive.Models.ApplicationUser
+
+@{
+    ViewData["Title"] = "View User Profile";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container py-5">
+    <h2 class="text-center mb-5 fw-bold text-white" style="font-family: 'Merriweather', serif; font-size: 2.5rem;">
+        <i class="bi bi-person-circle me-2 text-teal-500"></i>User Profile: @Model.UserName
+    </h2>
+
+    <div class="card shadow-lg border-0 rounded-3 animate__animated animate__fadeIn" style="background: #1e293b;">
+        <div class="card-header rounded-top-3 text-white py-4" style="background: linear-gradient(90deg, #312e81, #14b8a6);">
+            <h3 class="mb-0 fw-semibold text-center"><i class="bi bi-person-lines-fill me-2"></i>User Details</h3>
+        </div>
+        <div class="card-body p-5 text-white">
+            <div class="text-center mb-5">
+                @if (!string.IsNullOrEmpty(Model.ProfileImageUrl))
+                {
+                    <img src="@Model.ProfileImageUrl" alt="@Model.UserName" class="rounded-circle border border-teal-500 shadow-sm" style="width: 120px; height: 120px; object-fit: cover;" />
+                }
+                else
+                {
+                    <div class="rounded-circle bg-gray-600 d-flex align-items-center justify-content-center border border-teal-500 shadow-sm" style="width: 120px; height: 120px;">
+                        <i class="bi bi-person-fill text-white" style="font-size: 2rem;"></i>
+                    </div>
+                }
+            </div>
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <div class="bg-gray-700 p-3 rounded-lg shadow-sm">
+                        <dt class="fw-semibold text-teal-400"><i class="bi bi-person me-2"></i>Username</dt>
+                        <dd class="text-gray-200">@Model.UserName</dd>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="bg-gray-700 p-3 rounded-lg shadow-sm">
+                        <dt class="fw-semibold text-teal-400"><i class="bi bi-envelope-fill me-2"></i>Email</dt>
+                        <dd class="text-gray-200">@Model.Email</dd>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="bg-gray-700 p-3 rounded-lg shadow-sm">
+                        <dt class="fw-semibold text-teal-400"><i class="bi bi-person me-2"></i>First Name</dt>
+                        <dd class="text-gray-200">@(Model.FirstName ?? "Not set")</dd>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="bg-gray-700 p-3 rounded-lg shadow-sm">
+                        <dt class="fw-semibold text-teal-400"><i class="bi bi-person me-2"></i>Last Name</dt>
+                        <dd class="text-gray-200">@(Model.LastName ?? "Not set")</dd>
+                    </div>
+                </div>
+                <div class="col-12">
+                    <div class="bg-gray-700 p-3 rounded-lg shadow-sm">
+                        <dt class="fw-semibold text-teal-400"><i class="bi bi-shield-lock-fill me-2"></i>Roles</dt>
+                        <dd class="text-gray-200">@(string.Join(", ", ViewBag.Roles))</dd>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-6 text-center">
+                <a asp-action="Index" class="btn btn-secondary rounded-pill px-4 py-2 shadow-lg hover:bg-gray-600 transition-transform duration-300 transform hover:scale-105">
+                    <i class="bi bi-arrow-left-circle-fill me-2"></i>Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <style>
+        .text-teal-400 {
+            color: #2dd4bf;
+        }
+
+        .text-teal-500 {
+            color: #14b8a6;
+        }
+
+        .border-teal-500 {
+            border-color: #14b8a6;
+        }
+
+        .animate__fadeIn {
+            animation-duration: 1s;
+        }
+    </style>
+}

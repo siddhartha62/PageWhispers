@@ -1,0 +1,164 @@
+﻿@model BookHive.Models.BookViewModel
+
+@{
+    ViewData["Title"] = "Edit Book";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container py-5">
+    <h2 class="text-center mb-5 fw-bold text-white" style="font-family: 'Merriweather', serif; font-size: 2.5rem;">
+        <i class="bi bi-book-fill me-2 text-teal-500"></i>Edit Book
+    </h2>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show text-center animate__animated animate__fadeIn" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i>@TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show text-center animate__animated animate__fadeIn" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>@TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="card shadow-lg border-0 rounded-3 animate__animated animate__fadeIn" style="background: #1e293b;">
+        <div class="card-header rounded-top-3 text-white py-4" style="background: linear-gradient(90deg, #312e81, #14b8a6);">
+            <h3 class="mb-0 fw-semibold text-center"><i class="bi bi-gear-fill me-2"></i>Update Book Details</h3>
+        </div>
+        <div class="card-body p-5 text-white">
+            <form asp-action="Edit" method="post" enctype="multipart/form-data">
+                <input type="hidden" asp-for="Id" />
+                <input type="hidden" asp-for="CoverImageUrl" />
+
+                <div class="mb-4">
+                    <label asp-for="Title" class="form-label fw-semibold text-teal-400">
+                        <i class="bi bi-book me-2"></i>Title
+                    </label>
+                    <input asp-for="Title" class="form-control bg-gray-700 text-white border-gray-600 focus:ring-teal-500 focus:border-teal-500" />
+                    <span asp-validation-for="Title" class="text-red-400 d-block mt-1"></span>
+                </div>
+
+                <div class="mb-4">
+                    <label asp-for="Author" class="form-label fw-semibold text-teal-400">
+                        <i class="bi bi-person me-2"></i>Author
+                    </label>
+                    <input asp-for="Author" class="form-control bg-gray-700 text-white border-gray-600 focus:ring-teal-500 focus:border-teal-500" />
+                    <span asp-validation-for="Author" class="text-red-400 d-block mt-1"></span>
+                </div>
+
+                <div class="mb-4">
+                    <label asp-for="Description" class="form-label fw-semibold text-teal-400">
+                        <i class="bi bi-text-paragraph me-2"></i>Description
+                    </label>
+                    <textarea asp-for="Description" class="form-control bg-gray-700 text-white border-gray-600 focus:ring-teal-500 focus:border-teal-500" rows="5"></textarea>
+                    <span asp-validation-for="Description" class="text-red-400 d-block mt-1"></span>
+                </div>
+
+                <div class="mb-4">
+                    <label asp-for="Price" class="form-label fw-semibold text-teal-400">
+                        <i class="bi bi-currency-dollar me-2"></i>Price
+                    </label>
+                    <input asp-for="Price" type="number" step="0.01" class="form-control bg-gray-700 text-white border-gray-600 focus:ring-teal-500 focus:border-teal-500" />
+                    <span asp-validation-for="Price" class="text-red-400 d-block mt-1"></span>
+                </div>
+
+                <div class="mb-4">
+                    <label asp-for="Quantity" class="form-label fw-semibold text-teal-400">
+                        <i class="bi bi-123 me-2"></i>Quantity
+                    </label>
+                    <input asp-for="Quantity" type="number" class="form-control bg-gray-700 text-white border-gray-600 focus:ring-teal-500 focus:border-teal-500" />
+                    <span asp-validation-for="Quantity" class="text-red-400 d-block mt-1"></span>
+                </div>
+
+                <div class="mb-4">
+                    <label asp-for="CoverImage" class="form-label fw-semibold text-teal-400">
+                        <i class="bi bi-image-fill me-2"></i>Cover Image
+                    </label>
+                    <div class="accordion" id="coverImageAccordion">
+                        <div class="accordion-item bg-transparent border-0">
+                            <h2 class="accordion-header" id="headingImage">
+                                <button class="accordion-button collapsed bg-gray-700 text-white" type="button" data-bs-toggle="collapse" data-bs-target="#collapseImage" aria-expanded="false" aria-controls="collapseImage">
+                                    <i class="bi bi-eye-fill me-2"></i>View Current Cover Image
+                                </button>
+                            </h2>
+                            <div id="collapseImage" class="accordion-collapse collapse" aria-labelledby="headingImage" data-bs-parent="#coverImageAccordion">
+                                <div class="accordion-body text-center">
+                                    @if (!string.IsNullOrEmpty(Model.CoverImageUrl))
+                                    {
+                                        <img src="@Model.CoverImageUrl" alt="Current Cover" class="rounded border border-teal-500 shadow-sm" style="width: 120px; height: 120px; object-fit: cover;" />
+                                    }
+                                    else
+                                    {
+                                        <div class="bg-gray-600 rounded-lg p-4">
+                                            <p class="text-gray-400"><i class="bi bi-image me-2"></i>No cover image available.</p>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <input asp-for="CoverImage" type="file" class="form-control bg-gray-700 text-white border-gray-600 focus:ring-teal-500 focus:border-teal-500 mt-3" />
+                    <span asp-validation-for="CoverImage" class="text-red-400 d-block mt-1"></span>
+                </div>
+
+                <div class="d-flex justify-end gap-3">
+                    <a asp-action="Index" class="btn btn-secondary rounded-pill px-4 py-2 shadow-lg hover:bg-gray-600 transition-transform duration-300 transform hover:scale-105">
+                        <i class="bi bi-x-circle-fill me-2"></i>Cancel
+                    </a>
+                    <button type="submit" class="btn btn-teal-500 text-white rounded-pill px-4 py-2 shadow-lg hover:bg-teal-600 transition-transform duration-300 transform hover:scale-105">
+                        <i class="bi bi-check-circle-fill me-2"></i>Save Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <style>
+        .btn-teal-500 {
+            background-color: #14b8a6;
+        }
+
+            .btn-teal-500:hover {
+                background-color: #15d1bb;
+            }
+
+        .text-teal-400 {
+            color: #2dd4bf;
+        }
+
+        .text-teal-500 {
+            color: #14b8a6;
+        }
+
+        .border-teal-500 {
+            border-color: #14b8a6;
+        }
+
+        .animate__fadeIn {
+            animation-duration: 1s;
+        }
+
+        .accordion-button {
+            color: white !important;
+            background-color: #374151 !important;
+        }
+
+            .accordion-button:not(.collapsed) {
+                color: #14b8a6 !important;
+                background-color: #4b5563 !important;
+            }
+
+            .accordion-button:focus {
+                box-shadow: none;
+                border-color: rgba(0, 0, 0, 0.125);
+            }
+    </style>
+}

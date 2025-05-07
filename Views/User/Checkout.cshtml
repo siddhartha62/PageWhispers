@@ -1,0 +1,122 @@
+﻿@model IEnumerable<(BookHive.Models.Cart CartItem, decimal DiscountedPrice, bool OnSale)>
+
+@{
+    ViewData["Title"] = "Checkout";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container py-5">
+    <h2 class="text-center mb-5 fw-bold text-white" style="font-family: 'Merriweather', serif; font-size: 2.5rem;">
+        <i class="bi bi-cart-check-fill me-2 text-teal-500"></i>Checkout
+    </h2>
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show text-center animate__animated animate__fadeIn" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>@TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="card shadow-lg border-0 rounded-3 animate__animated animate__fadeIn" style="background: #1e293b;">
+        <div class="card-header rounded-top-3 text-white py-4" style="background: linear-gradient(90deg, #312e81, #14b8a6);">
+            <h3 class="mb-0 fw-semibold text-center"><i class="bi bi-cart-fill me-2"></i>Order Summary</h3>
+        </div>
+        <div class="card-body p-5 text-white">
+            <!-- Cart Items Grid -->
+            <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
+                @foreach (var (cartItem, discountedPrice, onSale) in Model)
+                {
+                    var book = cartItem.Book;
+                    <div class="col">
+                        <div class="card h-100 shadow-sm border-0 rounded-3 position-relative" style="background: #2d3748;">
+                            @if (onSale)
+                            {
+                                <span class="position-absolute top-0 end-0 bg-red-600 text-white text-xs font-medium px-2 py-1 rounded-start">On Sale</span>
+                            }
+                            @if (!string.IsNullOrEmpty(book.CoverImageUrl))
+                            {
+                                <img src="@book.CoverImageUrl" alt="@book.Title" class="card-img-top rounded-top-3" style="height: 144px; object-fit: cover;" />
+                            }
+                            else
+                            {
+                                <div class="card-img-top bg-gray-600 d-flex align-items-center justify-content-center rounded-top-3" style="height: 144px;">
+                                    <span class="text-gray-400"><i class="bi bi-image me-2"></i>No Image</span>
+                                </div>
+                            }
+                            <div class="card-body p-3 text-white">
+                                <h3 class="card-title text-base fw-semibold mb-1">@book.Title</h3>
+                                <p class="text-gray-200 text-sm mb-1"><i class="bi bi-person me-2 text-teal-400"></i>by @book.Author</p>
+                                @if (discountedPrice < book.Price)
+                                {
+                                    <p class="text-gray-200 text-sm mb-1">
+                                        <span class="text-decoration-line-through text-gray-500">$@book.Price</span>
+                                        <span class="text-green-500 ms-2">$@discountedPrice</span>
+                                    </p>
+                                }
+                                else
+                                {
+                                    <p class="text-gray-200 text-sm mb-1"><i class="bi bi-currency-dollar me-2 text-teal-400"></i>$@book.Price</p>
+                                }
+                                <p class="text-gray-200 text-sm mb-1"><i class="bi bi-123 me-2 text-teal-400"></i>Quantity: @cartItem.Quantity</p>
+                                <p class="text-gray-200 text-sm mb-2"><i class="bi bi-wallet2 me-2 text-teal-400"></i>Total: $@(discountedPrice * cartItem.Quantity)</p>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <!-- Total Price and Discount -->
+            <div class="mt-5 border-top border-gray-600 pt-4">
+                <p class="text-gray-200 text-sm mb-1"><i class="bi bi-cart-fill me-2 text-teal-400"></i>Total Items: @ViewBag.TotalItems</p>
+                <p class="text-gray-200 text-sm mb-1"><i class="bi bi-wallet2 me-2 text-teal-400"></i>Total Price: $@ViewBag.TotalPrice</p>
+                @if (ViewBag.DiscountAmount > 0)
+                {
+                    <p class="text-gray-200 text-sm mb-1"><i class="bi bi-tag-fill me-2 text-teal-400"></i>Discount: $@ViewBag.DiscountAmount</p>
+                }
+                else
+                {
+                    <p class="text-gray-200 text-sm mb-1"><i class="bi bi-tag me-2 text-teal-400"></i>No Discounts Applied</p>
+                }
+                <p class="text-gray-200 text-lg fw-semibold mb-3"><i class="bi bi-currency-dollar me-2 text-teal-400"></i>Final Price: $@ViewBag.FinalPrice</p>
+            </div>
+
+            <!-- Note About Claim Code -->
+            <div class="mt-4 text-center text-gray-200 text-sm">
+                <p><i class="bi bi-info-circle-fill me-2 text-teal-400"></i>After confirming your order, you will receive a claim code on the My Orders page. Present your membership ID and claim code at the store for in-store pickup.</p>
+            </div>
+
+            <!-- Confirm Order and Back to Cart Buttons -->
+            <div class="d-flex justify-center gap-3 mt-5">
+                <form asp-controller="Cart" asp-action="CheckoutConfirmed" method="post">
+                    <button type="submit" class="btn btn-teal-500 text-white rounded-pill px-4 py-2 shadow-lg hover:bg-teal-600 transition-transform duration-300 transform hover:scale-105">
+                        <i class="bi bi-check-circle-fill me-2"></i>Confirm Order
+                    </button>
+                </form>
+                <a asp-controller="Cart" asp-action="Cart" class="btn btn-secondary rounded-pill px-4 py-2 shadow-lg hover:bg-gray-600 transition-transform duration-300 transform hover:scale-105">
+                    <i class="bi bi-arrow-left-circle-fill me-2"></i>Back to Cart
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <style>
+        .btn-teal-500 {
+            background-color: #14b8a6;
+        }
+        .btn-teal-500:hover {
+            background-color: #15d1bb;
+        }
+        .text-teal-400 {
+            color: #2dd4bf;
+        }
+        .text-teal-500 {
+            color: #14b8a6;
+        }
+        .animate__fadeIn {
+            animation-duration: 1s;
+        }
+    </style>
+}

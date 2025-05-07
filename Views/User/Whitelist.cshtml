@@ -1,0 +1,120 @@
+﻿@model IEnumerable<BookHive.Models.BookWithDiscountViewModel>
+
+@{
+    ViewData["Title"] = "My Whitelist";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container py-5">
+    <h2 class="text-center mb-5 fw-bold text-white" style="font-family: 'Merriweather', serif; font-size: 2.5rem;">
+        <i class="bi bi-heart-fill me-2 text-teal-500"></i>My Whitelist
+    </h2>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show text-center animate__animated animate__fadeIn" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i>@TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show text-center animate__animated animate__fadeIn" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>@TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    @if (!Model.Any())
+    {
+        <p class="text-center text-gray-200 text-sm"><i class="bi bi-heart me-2 text-teal-400"></i>Your whitelist is empty.</p>
+    }
+    else
+    {
+        <div class="card shadow-lg border-0 rounded-3 animate__animated animate__fadeIn" style="background: #1e293b;">
+            <div class="card-header rounded-top-3 text-white py-4" style="background: linear-gradient(90deg, #312e81, #14b8a6);">
+                <h3 class="mb-0 fw-semibold text-center"><i class="bi bi-bookmark-heart-fill me-2"></i>Whitelist Items</h3>
+            </div>
+            <div class="card-body p-5">
+                <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
+                    @foreach (var item in Model)
+                    {
+                        var book = item.Book;
+                        <div class="col">
+                            <div class="card h-100 shadow-sm border-0 rounded-3 position-relative" style="background: #2d3748;">
+                                @if (item.OnSaleFlag && item.IsDiscountActive)
+                                {
+                                    <span class="position-absolute top-0 end-0 bg-red-600 text-white text-xs font-medium px-2 py-1 rounded-start">On Sale</span>
+                                }
+                                @if (!string.IsNullOrEmpty(book.CoverImageUrl))
+                                {
+                                    <a asp-controller="Books" asp-action="Details" asp-route-id="@book.Id">
+                                        <img src="@book.CoverImageUrl" alt="@book.Title" class="card-img-top rounded-top-3" style="height: 144px; object-fit: cover;" />
+                                    </a>
+                                }
+                                else
+                                {
+                                    <div class="card-img-top bg-gray-600 d-flex align-items-center justify-content-center rounded-top-3" style="height: 144px;">
+                                        <span class="text-gray-400"><i class="bi bi-image me-2"></i>No Image</span>
+                                    </div>
+                                }
+                                <div class="card-body p-3 text-white d-flex flex-column">
+                                    <h3 class="card-title text-base fw-semibold mb-1">
+                                        <a asp-controller="Books" asp-action="Details" asp-route-id="@book.Id" class="text-white hover:text-teal-400 transition-colors">@book.Title</a>
+                                    </h3>
+                                    <p class="text-gray-200 text-sm mb-1"><i class="bi bi-person me-2 text-teal-400"></i>by @book.Author</p>
+                                    <p class="text-gray-200 text-sm mb-1">
+                                        @if (item.IsDiscountActive)
+                                        {
+                                            <span class="text-decoration-line-through text-gray-500">$@book.Price</span>
+                                            <span class="text-green-500 font-medium ms-2">$@item.DiscountedPrice.ToString("F2")</span>
+                                        }
+                                        else
+                                        {
+                                            <span><i class="bi bi-currency-dollar me-2 text-teal-400"></i>$@book.Price</span>
+                                        }
+                                    </p>
+                                    <p class="text-gray-200 text-sm mb-2 flex-grow line-clamp-2"><i class="bi bi-file-text me-2 text-teal-400"></i>@book.Description</p>
+                                    <form asp-controller="Cart" asp-action="RemoveFromWhitelist" method="post">
+                                        <input type="hidden" name="bookId" value="@book.Id" />
+                                        <button type="submit" class="w-100 btn btn-danger rounded-pill py-1 shadow-sm hover:bg-red-700 transition-transform duration-300 transform hover:scale-105">
+                                            <i class="bi bi-trash-fill me-2"></i>Remove
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <style>
+        .btn-teal-500 {
+            background-color: #14b8a6;
+        }
+        .btn-teal-500:hover {
+            background-color: #15d1bb;
+        }
+        .text-teal-400 {
+            color: #2dd4bf;
+        }
+        .text-teal-500 {
+            color: #14b8a6;
+        }
+        .animate__fadeIn {
+            animation-duration: 1s;
+        }
+        .line-clamp-2 {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+    </style>
+}

@@ -1,0 +1,61 @@
+﻿@model BookHive.Models.TimedAnnouncement
+
+@{
+    ViewData["Title"] = "Edit Announcement";
+}
+
+<div class="container mx-auto px-4 py-6">
+    <h2 class="text-2xl font-bold text-center text-amber-900 mb-6">Edit Announcement</h2>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="bg-green-100 text-green-700 p-2 rounded mb-4 text-center text-sm">
+            @TempData["SuccessMessage"]
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="bg-red-100 text-red-700 p-2 rounded mb-4 text-center text-sm">
+            @TempData["ErrorMessage"]
+        </div>
+    }
+
+    <div class="bg-amber-50 rounded-lg shadow-md p-6 max-w-lg mx-auto">
+        <form asp-action="Edit" method="post">
+            <input type="hidden" asp-for="Id" />
+            <div class="mb-4">
+                <label asp-for="Title" class="block text-gray-700 text-sm font-semibold mb-2">Title</label>
+                <input asp-for="Title" class="w-full p-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-amber-500" />
+                <span asp-validation-for="Title" class="text-red-600 text-sm"></span>
+            </div>
+
+            <div class="mb-4">
+                <label asp-for="Message" class="block text-gray-700 text-sm font-semibold mb-2">Message</label>
+                <textarea asp-for="Message" class="w-full p-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-amber-500" rows="5"></textarea>
+                <span asp-validation-for="Message" class="text-red-600 text-sm"></span>
+            </div>
+
+            <div class="mb-4">
+                <label asp-for="StartDate" class="block text-gray-700 text-sm font-semibold mb-2">Start Date (UTC)</label>
+                <input asp-for="StartDate" type="datetime-local" class="w-full p-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-amber-500" />
+                <span asp-validation-for="StartDate" class="text-red-600 text-sm"></span>
+            </div>
+
+            <div class="mb-4">
+                <label asp-for="ExpiresAt" class="block text-gray-700 text-sm font-semibold mb-2">Expires At (UTC)</label>
+                <input asp-for="ExpiresAt" type="datetime-local" class="w-full p-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-amber-500" />
+                <span asp-validation-for="ExpiresAt" class="text-red-600 text-sm"></span>
+            </div>
+
+            <div class="text-center">
+                <button type="submit" class="inline-block bg-amber-600 text-white font-medium text-sm py-1.5 px-3 rounded hover:bg-amber-700">Save</button>
+                <a asp-action="Index" class="inline-block bg-gray-500 text-white font-medium text-sm py-1.5 px-3 rounded hover:bg-gray-600 ml-2">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

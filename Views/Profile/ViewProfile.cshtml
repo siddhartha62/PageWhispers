@@ -1,0 +1,110 @@
+﻿@model BookHive.Models.ProfileViewModel
+
+@{
+    ViewData["Title"] = "View Profile";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container py-5">
+    <h2 class="text-center mb-5 fw-bold text-white" style="font-family: 'Merriweather', serif; font-size: 2.5rem;">
+        <i class="bi bi-person-circle me-2 text-teal-500"></i>Your Profile
+    </h2>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show text-center animate__animated animate__fadeIn" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i>@TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    @if (TempData["ResetLink"] != null)
+    {
+        <div class="alert alert-info alert-dismissible fade show text-center animate__animated animate__fadeIn" role="alert">
+            <i class="bi bi-link-45deg me-2"></i>Password reset link: <a href="@TempData["ResetLink"]" class="underline text-blue-600 hover:text-blue-800">Click here</a>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="card shadow-lg border-0 rounded-3 animate__animated animate__fadeIn" style="background: #1e293b;">
+        <div class="card-header rounded-top-3 text-white py-4" style="background: linear-gradient(90deg, #312e81, #14b8a6);">
+            <h3 class="mb-0 fw-semibold text-center"><i class="bi bi-person-lines-fill me-2"></i>Profile Details</h3>
+        </div>
+        <div class="card-body p-5 text-white">
+            <div class="text-center mb-5">
+                @if (!string.IsNullOrEmpty(Model.ProfileImageUrl))
+                {
+                    <img src="@Model.ProfileImageUrl" alt="Profile Image" class="rounded-circle border border-teal-500 shadow-sm" style="width: 120px; height: 120px; object-fit: cover;" />
+                }
+                else
+                {
+                    <div class="rounded-circle bg-gray-600 d-flex align-items-center justify-content-center border border-teal-500 shadow-sm" style="width: 120px; height: 120px;">
+                        <i class="bi bi-person-fill text-white" style="font-size: 2rem;"></i>
+                    </div>
+                }
+            </div>
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <div class="bg-gray-700 p-3 rounded-lg shadow-sm">
+                        <dt class="fw-semibold text-teal-400"><i class="bi bi-person me-2"></i>Username</dt>
+                        <dd class="text-gray-200">@Model.UserName</dd>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="bg-gray-700 p-3 rounded-lg shadow-sm">
+                        <dt class="fw-semibold text-teal-400"><i class="bi bi-envelope-fill me-2"></i>Email</dt>
+                        <dd class="text-gray-200">@Model.Email</dd>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="bg-gray-700 p-3 rounded-lg shadow-sm">
+                        <dt class="fw-semibold text-teal-400"><i class="bi bi-person me-2"></i>First Name</dt>
+                        <dd class="text-gray-200">@(Model.FirstName ?? "Not set")</dd>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="bg-gray-700 p-3 rounded-lg shadow-sm">
+                        <dt class="fw-semibold text-teal-400"><i class="bi bi-person me-2"></i>Last Name</dt>
+                        <dd class="text-gray-200">@(Model.LastName ?? "Not set")</dd>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-6 text-center d-flex justify-content-center gap-3">
+                <a asp-action="Edit" class="btn btn-teal-500 text-white rounded-pill px-4 py-2 shadow-lg hover:bg-teal-600 transition-transform duration-300 transform hover:scale-105">
+                    <i class="bi bi-pencil-fill me-2"></i>Edit Profile
+                </a>
+                <a asp-action="ChangePassword" class="btn btn-teal-500 text-white rounded-pill px-4 py-2 shadow-lg hover:bg-teal-600 transition-transform duration-300 transform hover:scale-105">
+                    <i class="bi bi-key-fill me-2"></i>Change Password
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <style>
+        .btn-teal-500 {
+            background-color: #14b8a6;
+        }
+
+            .btn-teal-500:hover {
+                background-color: #15d1bb;
+            }
+
+        .text-teal-400 {
+            color: #2dd4bf;
+        }
+
+        .text-teal-500 {
+            color: #14b8a6;
+        }
+
+        .border-teal-500 {
+            border-color: #14b8a6;
+        }
+
+        .animate__fadeIn {
+            animation-duration: 1s;
+        }
+    </style>
+}

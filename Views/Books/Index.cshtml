@@ -1,0 +1,401 @@
+﻿@model IEnumerable<BookHive.Models.BookWithDiscountViewModel>
+@using Microsoft.AspNetCore.Identity
+@inject UserManager<BookHive.Models.ApplicationUser> UserManager
+
+@{
+    ViewData["Title"] = "Books";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<!-- Explicitly include Bootstrap and Bootstrap Icons for testing -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+
+<div class="container py-5">
+    <!-- Admin Create Link -->
+    @if (User.Identity.IsAuthenticated)
+    {
+        var user = await UserManager.GetUserAsync(User);
+        if (user != null && await UserManager.IsInRoleAsync(user, "Admin"))
+        {
+            <div class="text-center mb-4">
+                <a asp-action="Create" class="btn btn-primary rounded-pill px-4 py-2">
+                    <i class="bi bi-book-fill me-2"></i>Create New Book
+                </a>
+            </div>
+        }
+    }
+
+    <!-- User Navigation Links -->
+    @if (User.Identity.IsAuthenticated)
+    {
+        var user = await UserManager.GetUserAsync(User);
+        if (user != null && !(await UserManager.IsInRoleAsync(user, "Admin") || await UserManager.IsInRoleAsync(user, "Staff")))
+        {
+            <div class="text-center mb-4 d-flex justify-content-center gap-3">
+                <a asp-controller="Cart" asp-action="Whitelist" class="btn btn-primary rounded-pill px-4 py-2">
+                    <i class="bi bi-heart-fill me-2"></i>View Whitelist
+                </a>
+            </div>
+        }
+    }
+
+    <!-- Category Tabs -->
+    <div class="mb-5">
+        <ul class="nav nav-pills justify-content-center gap-2 flex-wrap">
+            <li class="nav-item">
+                <a asp-action="Index" asp-route-category="all" asp-route-page="1" class="nav-link rounded-pill px-4 py-2 text-sm font-medium @(ViewBag.Category == "all" ? "active bg-primary text-white" : "bg-light text-primary")">
+                    <i class="bi bi-bookshelf me-1"></i>All Books
+                </a>
+            </li>
+            <li class="nav-item">
+                <a asp-action="Index" asp-route-category="bestsellers" asp-route-page="1" class="nav-link rounded-pill px-4 py-2 text-sm font-medium @(ViewBag.Category == "bestsellers" ? "active bg-primary text-white" : "bg-light text-primary")">
+                    <i class="bi bi-star-fill me-1"></i>Bestsellers
+                </a>
+            </li>
+            <li class="nav-item">
+                <a asp-action="Index" asp-route-category="awardwinners" asp-route-page="1" class="nav-link rounded-pill px-4 py-2 text-sm font-medium @(ViewBag.Category == "awardwinners" ? "active bg-primary text-white" : "bg-light text-primary")">
+                    <i class="bi bi-trophy-fill me-1"></i>Award Winners
+                </a>
+            </li>
+            <li class="nav-item">
+                <a asp-action="Index" asp-route-category="newreleases" asp-route-page="1" class="nav-link rounded-pill px-4 py-2 text-sm font-medium @(ViewBag.Category == "newreleases" ? "active bg-primary text-white" : "bg-light text-primary")">
+                    <i class="bi bi-bookmark-star-fill me-1"></i>New Releases
+                </a>
+            </li>
+            <li class="nav-item">
+                <a asp-action="Index" asp-route-category="newarrivals" asp-route-page="1" class="nav-link rounded-pill px-4 py-2 text-sm font-medium @(ViewBag.Category == "newarrivals" ? "active bg-primary text-white" : "bg-light text-primary")">
+                    <i class="bi bi-box-seam me-1"></i>New Arrivals
+                </a>
+            </li>
+            <li class="nav-item">
+                <a asp-action="Index" asp-route-category="comingsoon" asp-route-page="1" class="nav-link rounded-pill px-4 py-2 text-sm font-medium @(ViewBag.Category == "comingsoon" ? "active bg-primary text-white" : "bg-light text-primary")">
+                    <i class="bi bi-clock-fill me-1"></i>Coming Soon
+                </a>
+            </li>
+            <li class="nav-item">
+                <a asp-action="Index" asp-route-category="deals" asp-route-page="1" class="nav-link rounded-pill px-4 py-2 text-sm font-medium @(ViewBag.Category == "deals" ? "active bg-primary text-white" : "bg-light text-primary")">
+                    <i class="bi bi-tag-fill me-1"></i>Deals
+                </a>
+            </li>
+        </ul>
+    </div>
+
+    <!-- Filter Form -->
+    <div class="mb-5">
+        <form asp-action="Index" method="get" id="filterForm" class="d-flex flex-wrap gap-2 justify-content-center align-items-end">
+            <!-- Search -->
+            <div class="form-group">
+                <label class="form-label fw-semibold text-muted"><i class="bi bi-search me-1"></i>Search</label>
+                <input type="text" name="search" value="@ViewBag.Search" placeholder="Search by title, ISBN, or description" class="form-control form-control-sm" />
+            </div>
+
+            <!-- Sort -->
+            <div class="form-group">
+                <label class="form-label fw-semibold text-muted"><i class="bi bi-sort-down me-1"></i>Sort</label>
+                <select name="sort" class="form-control form-control-sm">
+                    <option value="title" selected="@(ViewBag.Sort == "title")">Sort by Title</option>
+                    <option value="publicationdate" selected="@(ViewBag.Sort == "publicationdate")">Sort by Publication Date</option>
+                    <option value="price" selected="@(ViewBag.Sort == "price")">Sort by Price</option>
+                    <option value="popularity" selected="@(ViewBag.Sort == "popularity")">Sort by Popularity</option>
+                    <option value="author" selected="@(ViewBag.Sort == "author")">Sort by Author</option>
+                </select>
+            </div>
+
+            <!-- Author -->
+            <div class="form-group">
+                <label class="form-label fw-semibold text-muted"><i class="bi bi-person me-1"></i>Author</label>
+                <input type="text" name="author" value="@ViewBag.Author" placeholder="Author" class="form-control form-control-sm" />
+            </div>
+
+            <!-- Genre -->
+            <div class="form-group">
+                <label class="form-label fw-semibold text-muted"><i class="bi bi-book me-1"></i>Genre</label>
+                <input type="text" name="genre" value="@ViewBag.Genre" placeholder="Genre" class="form-control form-control-sm" />
+            </div>
+
+            <!-- Availability -->
+            <div class="form-group">
+                <label class="form-label fw-semibold text-muted"><i class="bi bi-check-circle me-1"></i>Availability</label>
+                <select name="availability" class="form-control form-control-sm">
+                    <option value="all" selected="@(ViewBag.Availability == "all")">All Availability</option>
+                    <option value="available" selected="@(ViewBag.Availability == "available")">In Stock</option>
+                    <option value="unavailable" selected="@(ViewBag.Availability == "unavailable")">Out of Stock</option>
+                </select>
+            </div>
+
+            <!-- Physical Library Access -->
+            <div class="form-group">
+                <label class="form-label fw-semibold text-muted"><i class="bi bi-building me-1"></i>Library Access</label>
+                <select name="physicalLibraryAccess" class="form-control form-control-sm">
+                    <option value="" selected="@(ViewBag.PhysicalLibraryAccess == null)">All Library Access</option>
+                    <option value="true" selected="@(ViewBag.PhysicalLibraryAccess == true)">Available in Library</option>
+                    <option value="false" selected="@(ViewBag.PhysicalLibraryAccess == false)">Not in Library</option>
+                </select>
+            </div>
+
+            <!-- Price Range -->
+            <div class="form-group">
+                <label class="form-label fw-semibold text-muted"><i class="bi bi-currency-dollar me-1"></i>Price Range</label>
+                <div class="d-flex gap-2">
+                    <input type="number" name="minPrice" value="@ViewBag.MinPrice" placeholder="Min Price" step="0.01" class="form-control form-control-sm" style="width: 100px;" />
+                    <input type="number" name="maxPrice" value="@ViewBag.MaxPrice" placeholder="Max Price" step="0.01" class="form-control form-control-sm" style="width: 100px;" />
+                </div>
+            </div>
+
+            <!-- Minimum Rating -->
+            <div class="form-group">
+                <label class="form-label fw-semibold text-muted"><i class="bi bi-star-fill me-1"></i>Min Rating</label>
+                <input type="number" name="minRating" value="@ViewBag.MinRating" placeholder="Min Rating (0-5)" step="0.1" min="0" max="5" class="form-control form-control-sm" style="width: 120px;" />
+            </div>
+
+            <!-- Language -->
+            <div class="form-group">
+                <label class="form-label fw-semibold text-muted"><i class="bi bi-globe me-1"></i>Language</label>
+                <input type="text" name="language" value="@ViewBag.Language" placeholder="Language" class="form-control form-control-sm" />
+            </div>
+
+            <!-- Format -->
+            <div class="form-group">
+                <label class="form-label fw-semibold text-muted"><i class="bi bi-book-half me-1"></i>Format</label>
+                <select name="format" class="form-control form-control-sm">
+                    <option value="" selected="@(string.IsNullOrEmpty(ViewBag.Format))">All Formats</option>
+                    <option value="paperback" selected="@(ViewBag.Format == "paperback")">Paperback</option>
+                    <option value="hardcover" selected="@(ViewBag.Format == "hardcover")">Hardcover</option>
+                    <option value="signed" selected="@(ViewBag.Format == "signed")">Signed Edition</option>
+                    <option value="limited" selected="@(ViewBag.Format == "limited")">Limited Edition</option>
+                    <option value="first" selected="@(ViewBag.Format == "first")">First Edition</option>
+                    <option value="collectors" selected="@(ViewBag.Format == "collectors")">Collector's Edition</option>
+                    <option value="authors" selected="@(ViewBag.Format == "authors")">Author's Edition</option>
+                    <option value="deluxe" selected="@(ViewBag.Format == "deluxe")">Deluxe Edition</option>
+                </select>
+            </div>
+
+            <!-- Publisher -->
+            <div class="form-group">
+                <label class="form-label fw-semibold text-muted"><i class="bi bi-building-fill me-1"></i>Publisher</label>
+                <input type="text" name="publisher" value="@ViewBag.Publisher" placeholder="Publisher" class="form-control form-control-sm" />
+            </div>
+
+            <!-- Apply Filters Button -->
+            <div class="form-group">
+                <button type="submit" class="btn btn-primary rounded-pill px-4 py-2">
+                    <i class="bi bi-funnel-fill me-2"></i>Apply Filters
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Book Grid -->
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-md-4 row-cols-lg-6 row-cols-xl-8 g-4">
+        @foreach (var item in Model)
+        {
+            var book = item.Book;
+            <div class="col">
+                <div class="card h-100 shadow border-0 position-relative" style="transition: transform 0.2s;">
+                    @if (item.OnSaleFlag)
+                    {
+                        <span class="position-absolute top-0 end-0 bg-danger text-white text-xs font-semibold px-2 py-1 rounded-start">On Sale</span>
+                    }
+                    <div class="position-relative">
+                        @if (!string.IsNullOrEmpty(book.CoverImageUrl))
+                        {
+                            <a asp-action="Details" asp-route-id="@book.Id">
+                                <img src="@book.CoverImageUrl" alt="@book.Title" class="card-img-top rounded-top" style="height: 144px; object-fit: cover;" />
+                            </a>
+                        }
+                        else
+                        {
+                            <div class="card-img-top rounded-top bg-light d-flex align-items-center justify-content-center" style="height: 144px;">
+                                <span class="text-muted text-sm">No Image</span>
+                            </div>
+                        }
+                        @if (User.Identity.IsAuthenticated)
+                        {
+                            var user = await UserManager.GetUserAsync(User);
+                            if (user != null && !(await UserManager.IsInRoleAsync(user, "Admin") || await UserManager.IsInRoleAsync(user, "Staff")))
+                            {
+                                <button class="wishlist-toggle position-absolute top-2 end-2 text-gray-500 hover:text-red-500" data-book-id="@book.Id" title="Toggle Wishlist">
+                                    <i class="bi bi-heart heart-outline fs-5"></i>
+                                    <i class="bi bi-heart-fill heart-filled fs-5 d-none text-red-500"></i>
+                                </button>
+                            }
+                        }
+                    </div>
+                    <div class="card-body d-flex flex-column p-3">
+                        <h3 class="card-title mb-1 text-dark fw-semibold text-sm">
+                            <a asp-action="Details" asp-route-id="@book.Id">@book.Title</a>
+                        </h3>
+                        <p class="text-muted text-xs mb-1"><i class="bi bi-person me-1"></i>by @book.Author</p>
+                        @if (item.IsDiscountActive)
+                        {
+                            <p class="text-muted text-xs mb-1">
+                                <span class="text-decoration-line-through">Price: $@book.Price</span>
+                                <span class="text-success ms-2">Now: $@item.DiscountedPrice</span>
+                            </p>
+                        }
+                        else
+                        {
+                            <p class="text-muted text-xs mb-1"><i class="bi bi-currency-dollar me-1"></i>Price: $@book.Price</p>
+                        }
+                        <p class="text-muted text-xs mb-1">
+                            @if (book.Quantity > 0)
+                            {
+                                <span><i class="bi bi-box-seam me-1"></i>Qty: @book.Quantity</span>
+                            }
+                            else
+                            {
+                                <span class="text-danger"><i class="bi bi-exclamation-circle me-1"></i>Out of Stock</span>
+                            }
+                        </p>
+                        <p class="text-muted text-xs mb-2 flex-grow line-clamp-2">@book.Description</p>
+                        <p class="text-muted text-xs mb-2"><i class="bi bi-calendar-date me-1"></i>Added: @book.AddedDate.ToString("d MMM yy")</p>
+                        @if (User.Identity.IsAuthenticated)
+                        {
+                            var user = await UserManager.GetUserAsync(User);
+                            if (user != null && await UserManager.IsInRoleAsync(user, "Admin"))
+                            {
+                                <div class="d-flex gap-2">
+                                    <a asp-action="Edit" asp-route-id="@book.Id" class="btn btn-primary btn-sm rounded-pill flex-1">
+                                        <i class="bi bi-pencil-fill me-1"></i>Edit
+                                    </a>
+                                    <a asp-action="Delete" asp-route-id="@book.Id" class="btn btn-danger btn-sm rounded-pill flex-1">
+                                        <i class="bi bi-trash-fill me-1"></i>Delete
+                                    </a>
+                                </div>
+                            }
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    <!-- Pagination -->
+    @if (ViewBag.TotalPages > 1)
+    {
+        <div class="d-flex justify-content-center mt-5">
+            <nav aria-label="Page navigation">
+                <ul class="pagination">
+                    @for (int i = 1; i <= ViewBag.TotalPages; i++)
+                    {
+                        <li class="page-item @(i == ViewBag.CurrentPage ? "active" : "")">
+                            <a class="page-link rounded-pill px-3 py-1 text-sm"
+                               asp-action="Index"
+                               asp-route-page="@i"
+                               asp-route-sort="@ViewBag.Sort"
+                               asp-route-category="@ViewBag.Category"
+                               asp-route-search="@ViewBag.Search"
+                               asp-route-author="@ViewBag.Author"
+                               asp-route-genre="@ViewBag.Genre"
+                               asp-route-availability="@ViewBag.Availability"
+                               asp-route-physicalLibraryAccess="@ViewBag.PhysicalLibraryAccess"
+                               asp-route-minPrice="@ViewBag.MinPrice"
+                               asp-route-maxPrice="@ViewBag.MaxPrice"
+                               asp-route-minRating="@ViewBag.MinRating"
+                               asp-route-language="@ViewBag.Language"
+                               asp-route-format="@ViewBag.Format"
+                               asp-route-publisher="@ViewBag.Publisher">
+                                @i
+                            </a>
+                        </li>
+                    }
+                </ul>
+            </nav>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        .form-control:focus,
+        .form-control-sm:focus {
+            box-shadow: 0 0 10px rgba(13, 110, 253, 0.3);
+            border-color: #0d6efd;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover,
+        .btn-secondary:hover,
+        .btn-danger:hover {
+            transform: scale(1.05);
+            transition: transform 0.2s;
+        }
+
+        .card:hover {
+            transform: scale(1.03);
+            transition: transform 0.2s;
+        }
+
+        .line-clamp-2 {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+    </style>
+    <script>
+        $(document).ready(function() {
+            // Load initial wishlist status for each book
+            $('.wishlist-toggle').each(function() {
+                var bookId = $(this).data('book-id');
+                var button = $(this);
+                $.ajax({
+                    url: '@Url.Action("IsInWishlist", "Books")',
+                    type: 'GET',
+                    data: { bookId: bookId },
+                    success: function(response) {
+                        if (response.inWishlist) {
+                            button.find('.heart-outline').addClass('d-none');
+                            button.find('.heart-filled').removeClass('d-none');
+                            button.addClass('text-red-500');
+                        }
+                    },
+                    error: function() {
+                        console.log('Error checking wishlist status for book ' + bookId);
+                    }
+                });
+            });
+
+            // Handle wishlist toggle
+            $('.wishlist-toggle').click(function(e) {
+                e.preventDefault();
+                var bookId = $(this).data('book-id');
+                var button = $(this);
+                $.ajax({
+                    url: '@Url.Action("ToggleWishlist", "Books")',
+                    type: 'POST',
+                    data: { id: bookId },
+                    headers: {
+                        'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            if (response.inWishlist) {
+                                button.find('.heart-outline').addClass('d-none');
+                                button.find('.heart-filled').removeClass('d-none');
+                                button.addClass('text-red-500');
+                            } else {
+                                button.find('.heart-outline').removeClass('d-none');
+                                button.find('.heart-filled').addClass('d-none');
+                                button.removeClass('text-red-500');
+                            }
+                        } else {
+                            alert(response.message);
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        var errorMessage = xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : 'An error occurred while toggling the wishlist.';
+                        alert(errorMessage);
+                    }
+                });
+            });
+
+            // Auto-submit form on select change
+            $('select[name="sort"], select[name="availability"], select[name="format"]').change(function() {
+                $('#filterForm').submit();
+            });
+        });
+    </script>
+}

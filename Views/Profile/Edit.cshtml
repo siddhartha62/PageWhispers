@@ -1,0 +1,135 @@
+﻿@model BookHive.Models.ProfileViewModel
+
+@{
+    ViewData["Title"] = "Edit Profile";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container py-5">
+    <h2 class="text-center mb-5 fw-bold text-white" style="font-family: 'Merriweather', serif; font-size: 2.5rem;">
+        <i class="bi bi-person-gear me-2 text-teal-500"></i>Edit Profile
+    </h2>
+
+    <div class="card shadow-lg border-0 rounded-3 animate__animated animate__fadeIn" style="background: #1e293b;">
+        <div class="card-header rounded-top-3 text-white py-4" style="background: linear-gradient(90deg, #312e81, #14b8a6);">
+            <h3 class="mb-0 fw-semibold text-center"><i class="bi bi-gear-fill me-2"></i>Update Your Details</h3>
+        </div>
+        <div class="card-body p-5 text-white">
+            <form asp-action="Edit" method="post" enctype="multipart/form-data">
+                <div class="mb-4">
+                    <label asp-for="UserName" class="form-label fw-semibold text-teal-400">
+                        <i class="bi bi-person me-2"></i>Username
+                    </label>
+                    <input asp-for="UserName" class="form-control bg-gray-700 text-white border-gray-600 focus:ring-teal-500 focus:border-teal-500" required />
+                    <span asp-validation-for="UserName" class="text-red-400 d-block mt-1"></span>
+                </div>
+                <div class="mb-4">
+                    <label asp-for="Email" class="form-label fw-semibold text-teal-400">
+                        <i class="bi bi-envelope-fill me-2"></i>Email
+                    </label>
+                    <input asp-for="Email" class="form-control bg-gray-700 text-white border-gray-600 focus:ring-teal-500 focus:border-teal-500" required />
+                    <span asp-validation-for="Email" class="text-red-400 d-block mt-1"></span>
+                </div>
+                <div class="mb-4">
+                    <label asp-for="FirstName" class="form-label fw-semibold text-teal-400">
+                        <i class="bi bi-person me-2"></i>First Name
+                    </label>
+                    <input asp-for="FirstName" class="form-control bg-gray-700 text-white border-gray-600 focus:ring-teal-500 focus:border-teal-500" />
+                    <span asp-validation-for="FirstName" class="text-red-400 d-block mt-1"></span>
+                </div>
+                <div class="mb-4">
+                    <label asp-for="LastName" class="form-label fw-semibold text-teal-400">
+                        <i class="bi bi-person me-2"></i>Last Name
+                    </label>
+                    <input asp-for="LastName" class="form-control bg-gray-700 text-white border-gray-600 focus:ring-teal-500 focus:border-teal-500" />
+                    <span asp-validation-for="LastName" class="text-red-400 d-block mt-1"></span>
+                </div>
+                <div class="mb-4">
+                    <label asp-for="ProfileImage" class="form-label fw-semibold text-teal-400">
+                        <i class="bi bi-image-fill me-2"></i>Profile Image
+                    </label>
+                    <input asp-for="ProfileImage" type="file" accept="image/*" class="form-control bg-gray-700 text-white border-gray-600 focus:ring-teal-500 focus:border-teal-500" />
+                    <span asp-validation-for="ProfileImage" class="text-red-400 d-block mt-1"></span>
+                    <p class="text-gray-400 text-sm mt-1">Supported formats: JPG, PNG. Max size: 5MB.</p>
+                </div>
+                <div class="mb-4">
+                    <div class="accordion" id="profileImageAccordion">
+                        <div class="accordion-item bg-transparent border-0">
+                            <h2 class="accordion-header" id="headingImage">
+                                <button class="accordion-button collapsed bg-gray-700 text-white" type="button" data-bs-toggle="collapse" data-bs-target="#collapseImage" aria-expanded="false" aria-controls="collapseImage">
+                                    <i class="bi bi-eye-fill me-2"></i>View Current Profile Image
+                                </button>
+                            </h2>
+                            <div id="collapseImage" class="accordion-collapse collapse" aria-labelledby="headingImage" data-bs-parent="#profileImageAccordion">
+                                <div class="accordion-body text-center">
+                                    @if (!string.IsNullOrEmpty(Model.ProfileImageUrl))
+                                    {
+                                        <img src="@Model.ProfileImageUrl" alt="Profile Image" class="rounded-circle border border-teal-500 shadow-sm" style="width: 120px; height: 120px; object-fit: cover;" />
+                                    }
+                                    else
+                                    {
+                                        <div class="bg-gray-600 rounded-lg p-4">
+                                            <p class="text-gray-400"><i class="bi bi-image me-2"></i>No profile image available.</p>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="d-flex justify-end gap-3">
+                    <a asp-action="ViewProfile" class="btn btn-secondary rounded-pill px-4 py-2 shadow-lg hover:bg-gray-600 transition-transform duration-300 transform hover:scale-105">
+                        <i class="bi bi-x-circle-fill me-2"></i>Cancel
+                    </a>
+                    <button type="submit" class="btn btn-teal-500 text-white rounded-pill px-4 py-2 shadow-lg hover:bg-teal-600 transition-transform duration-300 transform hover:scale-105">
+                        <i class="bi bi-check-circle-fill me-2"></i>Save Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <style>
+        .btn-teal-500 {
+            background-color: #14b8a6;
+        }
+
+            .btn-teal-500:hover {
+                background-color: #15d1bb;
+            }
+
+        .text-teal-400 {
+            color: #2dd4bf;
+        }
+
+        .text-teal-500 {
+            color: #14b8a6;
+        }
+
+        .border-teal-500 {
+            border-color: #14b8a6;
+        }
+
+        .animate__fadeIn {
+            animation-duration: 1s;
+        }
+
+        .accordion-button {
+            color: white !important;
+            background-color: #374151 !important;
+        }
+
+            .accordion-button:not(.collapsed) {
+                color: #14b8a6 !important;
+                background-color: #4b5563 !important;
+            }
+
+            .accordion-button:focus {
+                box-shadow: none;
+                border-color: rgba(0, 0, 0, 0.125);
+            }
+    </style>
+}

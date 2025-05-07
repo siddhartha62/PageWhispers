@@ -1,0 +1,377 @@
+﻿@model IEnumerable<BookHive.Models.Order>
+
+@{
+    ViewData["Title"] = "My Orders";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container py-5">
+    <h2 class="text-center mb-5 fw-bold text-white" style="font-family: 'Merriweather', serif; font-size: 2.5rem;">
+        <i class="bi bi-box-seam me-2 text-teal-500"></i>My Orders
+    </h2>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show text-center animate__animated animate__fadeIn" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i>@TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show text-center animate__animated animate__fadeIn" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>@TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    @if (!Model.Any())
+    {
+        <p class="text-center text-gray-200 text-sm"><i class="bi bi-box-seam me-2"></i>You have no orders.</p>
+    }
+    else
+    {
+        <div class="card shadow-lg border-0 rounded-3 animate__animated animate__fadeIn" style="background: #1e293b;">
+            <div class="card-header rounded-top-3 text-white py-4" style="background: linear-gradient(90deg, #312e81, #14b8a6);">
+                <h3 class="mb-0 fw-semibold text-center"><i class="bi bi-list-ul me-2"></i>Order List</h3>
+            </div>
+            <div class="card-body p-5 text-white">
+                <!-- Tabs for filtering orders -->
+                <ul class="nav nav-tabs mb-4 border-bottom-0" role="tablist">
+                    <li class="nav-item">
+                        <button class="nav-link active text-teal-400 border-0 rounded-top-3 bg-gray-700" data-status="Placed" data-bs-toggle="tab" data-bs-target="#placedOrders" type="button" role="tab" aria-controls="placedOrders" aria-selected="true">Placed</button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link text-teal-400 border-0 rounded-top-3 bg-gray-700" data-status="Received" data-bs-toggle="tab" data-bs-target="#receivedOrders" type="button" role="tab" aria-controls="receivedOrders" aria-selected="false">Received</button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link text-teal-400 border-0 rounded-top-3 bg-gray-700" data-status="Cancelled" data-bs-toggle="tab" data-bs-target="#cancelledOrders" type="button" role="tab" aria-controls="cancelledOrders" aria-selected="false">Cancelled</button>
+                    </li>
+                </ul>
+
+                <form id="orders-form" method="post">
+                    <div class="tab-content">
+                        <div class="tab-pane fade show active" id="placedOrders" role="tabpanel">
+                            <div class="d-flex align-items-center justify-content-between mb-4">
+                                <div class="d-flex align-items-center">
+                                    <input type="checkbox" id="selectAll" class="form-check-input me-2" onchange="toggleSelectAll(this)" />
+                                    <label for="selectAll" class="form-check-label text-gray-200 text-sm fw-semibold">Select All</label>
+                                </div>
+                                <button type="submit" class="btn btn-danger rounded-pill px-4 py-1 shadow-lg hover:bg-red-700 transition-transform duration-300 transform hover:scale-105" id="action-selected-btn" disabled>
+                                    <i class="bi bi-trash-fill me-2"></i>Cancel Selected Orders
+                                </button>
+                            </div>
+                            <div class="space-y-4" id="orders-list">
+                                @foreach (var order in Model)
+                                {
+                                    <div class="order-item d-flex align-items-center justify-content-between p-4 rounded-lg shadow-sm" data-status="@(order.IsCancelled ? "Cancelled" : order.Status)" style="background: #2d3748;">
+                                        <div class="d-flex align-items-center">
+                                            <input type="checkbox" name="selectedOrders" value="@order.UserId|@order.BookId|@order.OrderDate.ToUniversalTime().ToString("o")" class="form-check-input order-checkbox me-4 @(order.IsCancelled || order.Status == "Received" || !order.IsCancellable ? "opacity-50 cursor-not-allowed" : "")" @(order.IsCancelled || order.Status == "Received" || !order.IsCancellable ? "disabled" : "") />
+                                            @if (!string.IsNullOrEmpty(order.Book.CoverImageUrl))
+                                            {
+                                                <img src="@order.Book.CoverImageUrl" alt="@order.Book.Title" class="rounded me-4" style="width: 64px; height: 64px; object-fit: cover;" />
+                                            }
+                                            else
+                                            {
+                                                <div class="bg-gray-600 rounded d-flex align-items-center justify-content-center me-4" style="width: 64px; height: 64px;">
+                                                    <span class="text-gray-400"><i class="bi bi-image me-2"></i>No Image</span>
+                                                </div>
+                                            }
+                                            <div>
+                                                <h3 class="text-base fw-semibold text-white">@order.Book.Title</h3>
+                                                <p class="text-gray-200 text-sm"><i class="bi bi-person me-2 text-teal-400"></i>by @order.Book.Author</p>
+                                                <p class="text-gray-200 text-sm"><i class="bi bi-clock me-2 text-teal-400"></i>Ordered: @order.OrderDate.ToString("d MMM yyyy HH:mm")</p>
+                                                <p class="text-gray-200 text-sm"><i class="bi bi-123 me-2 text-teal-400"></i>Quantity: @order.Quantity</p>
+                                                <p class="text-gray-200 text-sm"><i class="bi bi-wallet2 me-2 text-teal-400"></i>Total: $@order.TotalPrice</p>
+                                                <p class="text-gray-200 text-sm"><i class="bi bi-person-circle me-2 text-teal-400"></i>User ID: @order.UserId</p>
+                                                <p class="text-gray-200 text-sm"><i class="bi bi-ticket-perforated me-2 text-teal-400"></i>Claim Code: @order.ClaimCode</p>
+                                                <p class="text-gray-200 text-sm"><i class="bi bi-info-circle me-2 text-teal-400"></i>Status: @order.Status</p>
+                                                @if (order.IsCancelled)
+                                                {
+                                                    <p class="text-red-400 text-sm"><i class="bi bi-x-circle-fill me-2"></i>Cancelled on: @order.CancelledAt?.ToString("d MMM yyyy HH:mm")</p>
+                                                }
+                                                @if (order.IsFulfilled)
+                                                {
+                                                    <p class="text-green-400 text-sm"><i class="bi bi-check-circle-fill me-2"></i>Received on: @order.FulfilledAt?.ToString("d MMM yyyy HH:mm")</p>
+                                                }
+                                            </div>
+                                        </div>
+                                        @if (order.IsCancelled || order.Status == "Received")
+                                        {
+                                            <form asp-action="DeleteOrder" method="post">
+                                                <input type="hidden" name="userId" value="@order.UserId" />
+                                                <input type="hidden" name="bookId" value="@order.BookId" />
+                                                <input type="hidden" name="orderDate" value="@order.OrderDate.ToUniversalTime().ToString("o")" />
+                                                <button type="submit" class="btn btn-danger rounded-pill px-3 py-1 shadow-lg hover:bg-red-700 transition-transform duration-300 transform hover:scale-105">
+                                                    <i class="bi bi-trash-fill me-2"></i>Delete
+                                                </button>
+                                            </form>
+                                        }
+                                        else
+                                        {
+                                            <form asp-action="CancelOrder" method="post">
+                                                <input type="hidden" name="userId" value="@order.UserId" />
+                                                <input type="hidden" name="bookId" value="@order.BookId" />
+                                                <input type="hidden" name="orderDate" value="@order.OrderDate.ToUniversalTime().ToString("o")" />
+                                                <button type="submit" class="btn btn-danger rounded-pill px-3 py-1 shadow-lg hover:bg-red-700 transition-transform duration-300 transform hover:scale-105 @(order.IsCancelled || !order.IsCancellable ? "opacity-50 cursor-not-allowed" : "")" @(order.IsCancelled || !order.IsCancellable ? "disabled" : "")>
+                                                    <i class="bi bi-x-circle-fill me-2"></i>Cancel Order
+                                                </button>
+                                            </form>
+                                        }
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                        <div class="tab-pane fade" id="receivedOrders" role="tabpanel">
+                            <div class="d-flex align-items-center justify-content-between mb-4">
+                                <div class="d-flex align-items-center">
+                                    <input type="checkbox" id="selectAll" class="form-check-input me-2" onchange="toggleSelectAll(this)" />
+                                    <label for="selectAll" class="form-check-label text-gray-200 text-sm fw-semibold">Select All</label>
+                                </div>
+                                <button type="submit" class="btn btn-danger rounded-pill px-4 py-1 shadow-lg hover:bg-red-700 transition-transform duration-300 transform hover:scale-105" id="action-selected-btn" disabled>
+                                    <i class="bi bi-trash-fill me-2"></i>Delete Selected Orders
+                                </button>
+                            </div>
+                            <div class="space-y-4" id="orders-list">
+                                @foreach (var order in Model)
+                                {
+                                    <div class="order-item d-flex align-items-center justify-content-between p-4 rounded-lg shadow-sm" data-status="@(order.IsCancelled ? "Cancelled" : order.Status)" style="background: #2d3748;">
+                                        <div class="d-flex align-items-center">
+                                            <input type="checkbox" name="selectedOrders" value="@order.UserId|@order.BookId|@order.OrderDate.ToUniversalTime().ToString("o")" class="form-check-input order-checkbox me-4 @(order.IsCancelled || order.Status == "Received" || !order.IsCancellable ? "opacity-50 cursor-not-allowed" : "")" @(order.IsCancelled || order.Status == "Received" || !order.IsCancellable ? "disabled" : "") />
+                                            @if (!string.IsNullOrEmpty(order.Book.CoverImageUrl))
+                                            {
+                                                <img src="@order.Book.CoverImageUrl" alt="@order.Book.Title" class="rounded me-4" style="width: 64px; height: 64px; object-fit: cover;" />
+                                            }
+                                            else
+                                            {
+                                                <div class="bg-gray-600 rounded d-flex align-items-center justify-content-center me-4" style="width: 64px; height: 64px;">
+                                                    <span class="text-gray-400"><i class="bi bi-image me-2"></i>No Image</span>
+                                                </div>
+                                            }
+                                            <div>
+                                                <h3 class="text-base fw-semibold text-white">@order.Book.Title</h3>
+                                                <p class="text-gray-200 text-sm"><i class="bi bi-person me-2 text-teal-400"></i>by @order.Book.Author</p>
+                                                <p class="text-gray-200 text-sm"><i class="bi bi-clock me-2 text-teal-400"></i>Ordered: @order.OrderDate.ToString("d MMM yyyy HH:mm")</p>
+                                                <p class="text-gray-200 text-sm"><i class="bi bi-123 me-2 text-teal-400"></i>Quantity: @order.Quantity</p>
+                                                <p class="text-gray-200 text-sm"><i class="bi bi-wallet2 me-2 text-teal-400"></i>Total: $@order.TotalPrice</p>
+                                                <p class="text-gray-200 text-sm"><i class="bi bi-person-circle me-2 text-teal-400"></i>User ID: @order.UserId</p>
+                                                <p class="text-gray-200 text-sm"><i class="bi bi-ticket-perforated me-2 text-teal-400"></i>Claim Code: @order.ClaimCode</p>
+                                                <p class="text-gray-200 text-sm"><i class="bi bi-info-circle me-2 text-teal-400"></i>Status: @order.Status</p>
+                                                @if (order.IsCancelled)
+                                                {
+                                                    <p class="text-red-400 text-sm"><i class="bi bi-x-circle-fill me-2"></i>Cancelled on: @order.CancelledAt?.ToString("d MMM yyyy HH:mm")</p>
+                                                }
+                                                @if (order.IsFulfilled)
+                                                {
+                                                    <p class="text-green-400 text-sm"><i class="bi bi-check-circle-fill me-2"></i>Received on: @order.FulfilledAt?.ToString("d MMM yyyy HH:mm")</p>
+                                                }
+                                            </div>
+                                        </div>
+                                        @if (order.IsCancelled || order.Status == "Received")
+                                        {
+                                            <form asp-action="DeleteOrder" method="post">
+                                                <input type="hidden" name="userId" value="@order.UserId" />
+                                                <input type="hidden" name="bookId" value="@order.BookId" />
+                                                <input type="hidden" name="orderDate" value="@order.OrderDate.ToUniversalTime().ToString("o")" />
+                                                <button type="submit" class="btn btn-danger rounded-pill px-3 py-1 shadow-lg hover:bg-red-700 transition-transform duration-300 transform hover:scale-105">
+                                                    <i class="bi bi-trash-fill me-2"></i>Delete
+                                                </button>
+                                            </form>
+                                        }
+                                        else
+                                        {
+                                            <form asp-action="CancelOrder" method="post">
+                                                <input type="hidden" name="userId" value="@order.UserId" />
+                                                <input type="hidden" name="bookId" value="@order.BookId" />
+                                                <input type="hidden" name="orderDate" value="@order.OrderDate.ToUniversalTime().ToString("o")" />
+                                                <button type="submit" class="btn btn-danger rounded-pill px-3 py-1 shadow-lg hover:bg-red-700 transition-transform duration-300 transform hover:scale-105 @(order.IsCancelled || !order.IsCancellable ? "opacity-50 cursor-not-allowed" : "")" @(order.IsCancelled || !order.IsCancellable ? "disabled" : "")>
+                                                    <i class="bi bi-x-circle-fill me-2"></i>Cancel Order
+                                                </button>
+                                            </form>
+                                        }
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                        <div class="tab-pane fade" id="cancelledOrders" role="tabpanel">
+                            <div class="d-flex align-items-center justify-content-between mb-4">
+                                <div class="d-flex align-items-center">
+                                    <input type="checkbox" id="selectAll" class="form-check-input me-2" onchange="toggleSelectAll(this)" />
+                                    <label for="selectAll" class="form-check-label text-gray-200 text-sm fw-semibold">Select All</label>
+                                </div>
+                                <button type="submit" class="btn btn-danger rounded-pill px-4 py-1 shadow-lg hover:bg-red-700 transition-transform duration-300 transform hover:scale-105" id="action-selected-btn" disabled>
+                                    <i class="bi bi-trash-fill me-2"></i>Delete Selected Orders
+                                </button>
+                            </div>
+                            <div class="space-y-4" id="orders-list">
+                                @foreach (var order in Model)
+                                {
+                                    <div class="order-item d-flex align-items-center justify-content-between p-4 rounded-lg shadow-sm" data-status="@(order.IsCancelled ? "Cancelled" : order.Status)" style="background: #2d3748;">
+                                        <div class="d-flex align-items-center">
+                                            <input type="checkbox" name="selectedOrders" value="@order.UserId|@order.BookId|@order.OrderDate.ToUniversalTime().ToString("o")" class="form-check-input order-checkbox me-4 @(order.IsCancelled || order.Status == "Received" || !order.IsCancellable ? "opacity-50 cursor-not-allowed" : "")" @(order.IsCancelled || order.Status == "Received" || !order.IsCancellable ? "disabled" : "") />
+                                            @if (!string.IsNullOrEmpty(order.Book.CoverImageUrl))
+                                            {
+                                                <img src="@order.Book.CoverImageUrl" alt="@order.Book.Title" class="rounded me-4" style="width: 64px; height: 64px; object-fit: cover;" />
+                                            }
+                                            else
+                                            {
+                                                <div class="bg-gray-600 rounded d-flex align-items-center justify-content-center me-4" style="width: 64px; height: 64px;">
+                                                    <span class="text-gray-400"><i class="bi bi-image me-2"></i>No Image</span>
+                                                </div>
+                                            }
+                                            <div>
+                                                <h3 class="text-base fw-semibold text-white">@order.Book.Title</h3>
+                                                <p class="text-gray-200 text-sm"><i class="bi bi-person me-2 text-teal-400"></i>by @order.Book.Author</p>
+                                                <p class="text-gray-200 text-sm"><i class="bi bi-clock me-2 text-teal-400"></i>Ordered: @order.OrderDate.ToString("d MMM yyyy HH:mm")</p>
+                                                <p class="text-gray-200 text-sm"><i class="bi bi-123 me-2 text-teal-400"></i>Quantity: @order.Quantity</p>
+                                                <p class="text-gray-200 text-sm"><i class="bi bi-wallet2 me-2 text-teal-400"></i>Total: $@order.TotalPrice</p>
+                                                <p class="text-gray-200 text-sm"><i class="bi bi-person-circle me-2 text-teal-400"></i>User ID: @order.UserId</p>
+                                                <p class="text-gray-200 text-sm"><i class="bi bi-ticket-perforated me-2 text-teal-400"></i>Claim Code: @order.ClaimCode</p>
+                                                <p class="text-gray-200 text-sm"><i class="bi bi-info-circle me-2 text-teal-400"></i>Status: @order.Status</p>
+                                                @if (order.IsCancelled)
+                                                {
+                                                    <p class="text-red-400 text-sm"><i class="bi bi-x-circle-fill me-2"></i>Cancelled on: @order.CancelledAt?.ToString("d MMM yyyy HH:mm")</p>
+                                                }
+                                                @if (order.IsFulfilled)
+                                                {
+                                                    <p class="text-green-400 text-sm"><i class="bi bi-check-circle-fill me-2"></i>Received on: @order.FulfilledAt?.ToString("d MMM yyyy HH:mm")</p>
+                                                }
+                                            </div>
+                                        </div>
+                                        @if (order.IsCancelled || order.Status == "Received")
+                                        {
+                                            <form asp-action="DeleteOrder" method="post">
+                                                <input type="hidden" name="userId" value="@order.UserId" />
+                                                <input type="hidden" name="bookId" value="@order.BookId" />
+                                                <input type="hidden" name="orderDate" value="@order.OrderDate.ToUniversalTime().ToString("o")" />
+                                                <button type="submit" class="btn btn-danger rounded-pill px-3 py-1 shadow-lg hover:bg-red-700 transition-transform duration-300 transform hover:scale-105">
+                                                    <i class="bi bi-trash-fill me-2"></i>Delete
+                                                </button>
+                                            </form>
+                                        }
+                                        else
+                                        {
+                                            <form asp-action="CancelOrder" method="post">
+                                                <input type="hidden" name="userId" value="@order.UserId" />
+                                                <input type="hidden" name="bookId" value="@order.BookId" />
+                                                <input type="hidden" name="orderDate" value="@order.OrderDate.ToUniversalTime().ToString("o")" />
+                                                <button type="submit" class="btn btn-danger rounded-pill px-3 py-1 shadow-lg hover:bg-red-700 transition-transform duration-300 transform hover:scale-105 @(order.IsCancelled || !order.IsCancellable ? "opacity-50 cursor-not-allowed" : "")" @(order.IsCancelled || !order.IsCancellable ? "disabled" : "")>
+                                                    <i class="bi bi-x-circle-fill me-2"></i>Cancel Order
+                                                </button>
+                                            </form>
+                                        }
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    }
+
+    <div class="text-center mt-4">
+        <a asp-controller="Cart" asp-action="Cart" class="btn btn-secondary rounded-pill px-4 py-2 shadow-lg hover:bg-gray-600 transition-transform duration-300 transform hover:scale-105">
+            <i class="bi bi-arrow-left-circle-fill me-2"></i>Back to Cart
+        </a>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const selectAllCheckbox = document.getElementById('selectAll');
+        const actionSelectedBtn = document.getElementById('action-selected-btn');
+        const ordersForm = document.getElementById('orders-form');
+        let orderCheckboxes = document.querySelectorAll('.order-checkbox:not([disabled])');
+
+        // Function to filter orders by status using Bootstrap tabs
+        document.querySelectorAll('.nav-link').forEach(tab => {
+            tab.addEventListener('shown.bs.tab', function (event) {
+                const status = event.target.getAttribute('data-status');
+
+                // Update the list of selectable checkboxes based on visible orders
+                orderCheckboxes = document.querySelectorAll(`.tab-pane.show .order-checkbox:not([disabled])`);
+
+                // Reset "Select All" checkbox
+                selectAllCheckbox.checked = false;
+                selectAllCheckbox.indeterminate = false;
+                orderCheckboxes.forEach(checkbox => {
+                    checkbox.checked = false;
+                });
+
+                // Update form action and button text based on the active tab
+                if (status === 'Placed') {
+                    ordersForm.setAttribute('action', '@Url.Action("CancelOrders", "Cart")');
+                    actionSelectedBtn.innerHTML = '<i class="bi bi-trash-fill me-2"></i>Cancel Selected Orders';
+                } else {
+                    ordersForm.setAttribute('action', '@Url.Action("DeleteOrders", "Cart")');
+                    actionSelectedBtn.innerHTML = '<i class="bi bi-trash-fill me-2"></i>Delete Selected Orders';
+                }
+
+                // Update cancel/delete button state
+                actionSelectedBtn.disabled = true;
+            });
+        });
+
+        // Toggle "Select All" checkbox
+        function toggleSelectAll(checkbox) {
+            orderCheckboxes.forEach(cb => {
+                cb.checked = checkbox.checked;
+            });
+            actionSelectedBtn.disabled = !checkbox.checked;
+        }
+
+        // Update "Select All" checkbox state based on individual checkbox changes
+        orderCheckboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', () => {
+                const allChecked = Array.from(orderCheckboxes).every(cb => cb.checked);
+                const anyChecked = Array.from(orderCheckboxes).some(cb => cb.checked);
+                selectAllCheckbox.checked = allChecked;
+                selectAllCheckbox.indeterminate = !allChecked && anyChecked;
+                actionSelectedBtn.disabled = !anyChecked;
+            });
+        });
+
+        // Initialize by showing "Placed" orders
+        document.querySelector('.nav-link[data-status="Placed"]').click();
+    </script>
+    <style>
+        .btn-teal-500 {
+            background-color: #14b8a6;
+        }
+
+            .btn-teal-500:hover {
+                background-color: #15d1bb;
+            }
+
+        .text-teal-400 {
+            color: #2dd4bf;
+        }
+
+        .text-teal-500 {
+            color: #14b8a6;
+        }
+
+        .animate__fadeIn {
+            animation-duration: 1s;
+        }
+
+        .nav-tabs .nav-link {
+            color: #2dd4bf !important;
+            border: none !important;
+            background-color: #374151 !important;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+            .nav-tabs .nav-link.active {
+                color: #14b8a6 !important;
+                background-color: #4b5563 !important;
+                border-bottom: 2px solid #14b8a6 !important;
+            }
+
+            .nav-tabs .nav-link:hover:not(.active) {
+                background-color: #4b5563 !important;
+            }
+    </style>
+}
