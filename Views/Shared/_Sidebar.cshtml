@@ -1,0 +1,141 @@
+﻿@using Microsoft.AspNetCore.Identity
+@using Microsoft.EntityFrameworkCore
+@inject SignInManager<PageWhisphers.Models.ApplicationUser> SignInManager
+@inject UserManager<PageWhisphers.Models.ApplicationUser> UserManager
+@inject PageWhisphers.Data.ApplicationDbContext _context
+
+@{
+    var user = await UserManager.GetUserAsync(User);
+    bool isAdmin = user != null && await UserManager.IsInRoleAsync(user, "Admin");
+    bool isStaff = user != null && await UserManager.IsInRoleAsync(user, "Staff");
+}
+
+<!-- Sidebar (Offcanvas for mobile, fixed for desktop) -->
+<div class="offcanvas offcanvas-start bg-dark text-white position-fixed d-md-block" style="width: 250px; height: 100vh;" tabindex="-1" id="sidebarOffcanvas" aria-labelledby="sidebarOffcanvasLabel">
+    <div class="offcanvas-header border-bottom border-secondary">
+        <h5 class="offcanvas-title" id="sidebarOffcanvasLabel">
+            <a href="/" class="text-white text-decoration-none">
+                <i class="bi bi-book-fill me-2"></i>Page Whispers
+            </a>
+        </h5>
+        <button type="button" class="btn-close btn-close-white d-md-none" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body p-0">
+        <nav class="d-flex flex-column h-100">
+            <ul class="nav flex-column p-3">
+                @if (SignInManager.IsSignedIn(User))
+                {
+                    <li class="nav-item mb-3">
+                        <div class="d-flex align-items-center p-2 bg-secondary rounded">
+                            @if (!string.IsNullOrEmpty(user?.ProfileImageUrl))
+                            {
+                                <img src="@user.ProfileImageUrl" alt="Profile" class="rounded-circle me-2" style="width: 40px; height: 40px; object-fit: cover;" />
+                            }
+                            else
+                            {
+                                <div class="rounded-circle bg-light d-flex align-items-center justify-content-center me-2" style="width: 40px; height: 40px;">
+                                    <i class="bi bi-person-fill text-dark fs-4"></i>
+                                </div>
+                            }
+                            <span class="text-light">Welcome, @(user?.FirstName ?? "User")</span>
+                        </div>
+                    </li>
+                    if (isAdmin)
+                    {
+                        <li class="nav-item">
+                            <a class="nav-link text-white" href="@Url.Action("Index", "Admin")">
+                                <i class="bi bi-gear-wide-connected me-2"></i>Dashboard
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-white" href="@Url.Action("CreateStaff", "Admin")">
+                                <i class="bi bi-person-plus-fill me-2"></i>Create Staff
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-white" href="@Url.Action("Create", "Books")">
+                                <i class="bi bi-book-fill me-2"></i>Add Book
+                            </a>
+                        </li>
+                    }
+                    if (isStaff)
+                    {
+                        <li class="nav-item">
+                            <a class="nav-link text-white" href="@Url.Action("FulfillOrder", "Staff")">
+                                <i class="bi bi-box-seam-fill me-2"></i>Orders
+                            </a>
+                        </li>
+                    }
+                }
+                <li class="nav-item">
+                    <a class="nav-link text-white" href="@Url.Action("Books", "Books")">
+                        <i class="bi bi-bookshelf me-2"></i>Books
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link text-white" href="@Url.Action("Index", "Announcement")">
+                        <i class="bi bi-megaphone-fill me-2"></i>Announcements
+                    </a>
+                </li>
+                @if (SignInManager.IsSignedIn(User))
+                {
+                    if (!isAdmin && !isStaff)
+                    {
+                        int cartCount = await _context.Carts.Where(c => c.UserId == user.Id).Select(c => c.BookId).Distinct().CountAsync();
+                        int orderCount = await _context.Orders.Where(o => o.UserId == user.Id && !o.IsCancelled && o.Status != "Received").CountAsync();
+                        <li class="nav-item">
+                            <a class="nav-link text-white" href="@Url.Action("Cart", "Cart")">
+                                <i class="bi bi-cart3 me-2"></i>Cart
+                                <span class="badge bg-primary rounded-pill ms-2">@cartCount</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-white" href="@Url.Action("MyOrders", "Cart")">
+                                <i class="bi bi-box-seam me-2"></i>Orders
+                                <span class="badge bg-primary rounded-pill ms-2">@orderCount</span>
+                            </a>
+                        </li>
+                    }
+                    <li class="nav-item">
+                        <a class="nav-link text-white" href="@Url.Action("ViewProfile", "Profile")">
+                            <i class="bi bi-person-circle me-2"></i>View Profile
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-white" href="@Url.Action("Edit", "Profile")">
+                            <i class="bi bi-person-gear me-2"></i>Edit Profile
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-white" href="@Url.Action("ChangePassword", "Profile")">
+                            <i class="bi bi-key-fill me-2"></i>Change Password
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-white" href="@Url.Action("Logout", "Account")">
+                            <i class="bi bi-box-arrow-right me-2"></i>Logout
+                        </a>
+                    </li>
+                }
+                else
+                {
+                    <li class="nav-item">
+                        <a class="nav-link text-white" href="@Url.Action("Login", "Account")">
+                            <i class="bi bi-box-arrow-in-right me-2"></i>Login
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-white" href="@Url.Action("Register", "Account")">
+                            <i class="bi bi-person-plus-fill me-2"></i>Register
+                        </a>
+                    </li>
+                }
+            </ul>
+        </nav>
+    </div>
+</div>
+
+<!-- Sidebar Toggle Button (Visible on Mobile) -->
+<button class="btn btn-dark d-md-none position-fixed top-0 start-0 m-3" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarOffcanvas" aria-controls="sidebarOffcanvas">
+    <i class="bi bi-list fs-4"></i>
+</button>

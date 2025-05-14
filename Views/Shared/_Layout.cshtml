@@ -1,0 +1,471 @@
+﻿@using Microsoft.AspNetCore.Identity
+@using Microsoft.EntityFrameworkCore
+@inject SignInManager<PageWhisphers.Models.ApplicationUser> SignInManager
+@inject UserManager<PageWhisphers.Models.ApplicationUser> UserManager
+@inject PageWhisphers.Data.ApplicationDbContext _context
+
+@{
+    var user = await UserManager.GetUserAsync(User);
+    bool isAdmin = user != null && await UserManager.IsInRoleAsync(user, "Admin");
+    bool isStaff = user != null && await UserManager.IsInRoleAsync(user, "Staff");
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewData["Title"]</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.1/signalr.min.js"></script>
+    <style>
+        :root {
+            /* Light Color Palette */
+            --sidebar-bg: #FFFFFF; /* Pure white */
+            --sidebar-gradient-start: #EFF6FF; /* Very light blue */
+            --sidebar-gradient-end: #E0F2FE; /* Light sky blue */
+            --accent-color: #3B82F6; /* Blue */
+            --text-light: #1F2937; /* Dark slate */
+            --text-medium: #4B5563; /* Medium gray */
+            --bg-main: rgba(0, 0, 0, 0.05); /* Very light gray */
+            --border-light: rgba(0, 0, 0, 0.05);
+        }
+
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            margin: 0;
+            font-family: 'Open Sans', sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-light);
+        }
+
+        /* Sidebar Styling */
+        .sidebar {
+            background: linear-gradient(180deg, var(--sidebar-gradient-start) 0%, var(--sidebar-gradient-end) 100%);
+            width: 320px; /* Wider to fit logo */
+            height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            display: flex;
+            flex-direction: column;
+            padding: 2rem 1.5rem;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+            transition: width 0.3s ease;
+        }
+
+            .sidebar.collapsed {
+                width: 80px;
+            }
+
+        .sidebar-brand {
+            font-family: 'Merriweather', serif;
+            font-size: 1.75rem;
+            color: var(--accent-color);
+            margin-bottom: 2rem;
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        /* Navigation Items */
+        .sidebar-nav {
+            flex: 1;
+            margin-bottom: 1rem;
+            padding: 0;
+            list-style: none;
+        }
+
+        .sidebar-nav-item + .sidebar-nav-item {
+            margin-top: 0.5rem;
+        }
+
+        .sidebar-nav-link {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            color: var(--text-light);
+            text-decoration: none;
+            border-radius: 0.5rem;
+            transition: background-color 0.2s ease, color 0.2s ease;
+            font-size: 1rem;
+        }
+
+            .sidebar-nav-link i {
+                width: 24px;
+                text-align: center;
+                margin-right: 0.75rem;
+                font-size: 1.25rem;
+                color: var(--accent-color);
+            }
+
+            .sidebar-nav-link:hover,
+            .sidebar-nav-link.active {
+                background-color: rgba(59, 130, 246, 0.1);
+                color: var(--accent-color);
+            }
+
+        /* Bottom Section */
+        .sidebar-bottom {
+            margin-top: auto;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--border-light);
+        }
+
+        /* User Profile */
+        .user-profile {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            background: rgba(59, 130, 246, 0.05);
+            transition: background-color 0.2s ease;
+        }
+
+            .user-profile:hover {
+                background: rgba(59, 130, 246, 0.1);
+            }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin-right: 0.75rem;
+            background: rgba(59, 130, 246, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+            .user-avatar img {
+                width: 100%;
+                height: 100%;
+                border-radius: 50%;
+                object-fit: cover;
+            }
+
+            .user-avatar i {
+                font-size: 1.25rem;
+                color: var(--accent-color);
+            }
+
+        .user-info .user-name {
+            font-weight: 600;
+            color: var(--text-light);
+            margin-bottom: 0;
+        }
+
+        .user-info .user-role {
+            font-size: 0.75rem;
+            color: var(--text-medium);
+        }
+
+        /* Dropdown */
+        .dropdown-menu {
+            background: var(--sidebar-bg);
+            border: 1px solid var(--border-light);
+        }
+
+        .dropdown-item {
+            color: var(--text-light);
+        }
+
+            .dropdown-item:hover {
+                background-color: rgba(59, 130, 246, 0.1);
+                color: var(--accent-color);
+            }
+
+        /* Main Content */
+        .main-content {
+            margin-left: 320px; /* Match sidebar width */
+            flex: 1;
+            padding: 2rem;
+            min-height: calc(100vh - 60px);
+            transition: margin-left 0.3s ease;
+        }
+
+            .main-content.collapsed {
+                margin-left: 80px;
+            }
+
+        /* Footer */
+        footer {
+            background: var(--sidebar-bg);
+            color: var(--text-medium);
+            padding: 1rem;
+            margin-left: 320px;
+            text-align: center;
+            border-top: 1px solid var(--border-light);
+            transition: margin-left 0.3s ease;
+        }
+
+    </style>
+</head>
+<body>
+    <!-- Hidden input for authentication state -->
+    <input type="hidden" id="isAuthenticated" value="@(SignInManager.IsSignedIn(User).ToString().ToLower())" />
+
+    <div id="notification-container"></div>
+
+    <!-- Sidebar Toggle Button for Mobile -->
+    <button class="sidebar-toggler d-lg-none" type="button">
+        <i class="bi bi-list"></i>
+    </button>
+
+    <!-- Sidebar -->
+    <nav class="sidebar">
+        <div class="sidebar-content">
+            <!-- Brand -->
+            <a asp-controller="Home" asp-action="Index" class="sidebar-brand d-block">
+                <i class="bi bi-book me-2"></i>Page Whispers
+            </a>
+
+           
+            <!-- Navigation -->
+            <ul class="sidebar-nav">
+                @if (SignInManager.IsSignedIn(User) && isAdmin)
+                {
+                    <!-- 1. Admin sees Dashboard first -->
+                    <li class="sidebar-nav-item">
+                        <a asp-controller="Admin" asp-action="Index"
+                           class="sidebar-nav-link @(ViewData["Title"] == "Admin Dashboard" ? "active" : "")">
+                            <i class="bi bi-speedometer2"></i> Dashboard
+                        </a>
+                    </li>
+                    <li class="sidebar-nav-item">
+                        <a asp-controller="Account" asp-action="CreateStaff"
+                           class="sidebar-nav-link @(ViewData["Title"] == "Create Staff" ? "active" : "")">
+                            <i class="bi bi-person-plus-fill"></i> Create Staff
+                        </a>
+                    </li>
+                    <li class="sidebar-nav-item">
+                        <a asp-controller="Books" asp-action="Create"
+                           class="sidebar-nav-link @(ViewData["Title"] == "Create Book" ? "active" : "")">
+                            <i class="bi bi-book-fill"></i> Add Book
+                        </a>
+                    </li>
+
+                    <!-- 2. Then common items -->
+                    <li class="sidebar-nav-item">
+                        <a asp-controller="Books" asp-action="Index"
+                           class="sidebar-nav-link @(ViewData["Title"] == "Books" ? "active" : "")">
+                            <i class="bi bi-bookshelf"></i> Books
+                        </a>
+                    </li>
+                    <li class="sidebar-nav-item">
+                        <a asp-controller="Announcements" asp-action="Index"
+                           class="sidebar-nav-link @(ViewData["Title"] == "Announcements" ? "active" : "")">
+                            <i class="bi bi-megaphone-fill"></i> Announcements
+                        </a>
+                    </li>
+                }
+                else
+                {
+                    <!-- Non-admin: Books first -->
+                    <li class="sidebar-nav-item">
+                        <a asp-controller="Books" asp-action="Index"
+                           class="sidebar-nav-link @(ViewData["Title"] == "Books" ? "active" : "")">
+                            <i class="bi bi-bookshelf"></i> Books
+                        </a>
+                    </li>
+                    <li class="sidebar-nav-item">
+                        <a asp-controller="Announcements" asp-action="Index"
+                           class="sidebar-nav-link @(ViewData["Title"] == "Announcements" ? "active" : "")">
+                            <i class="bi bi-megaphone-fill"></i> Announcements
+                        </a>
+                    </li>
+
+                    @if (SignInManager.IsSignedIn(User))
+                    {
+                        <!-- Customer -->
+                        @if (!isStaff)
+                        {
+                            <li class="sidebar-nav-item">
+                                <a asp-controller="Cart" asp-action="Cart"
+                                   class="sidebar-nav-link position-relative @(ViewData["Title"] == "Cart" ? "active" : "")">
+                                    <i class="bi bi-cart3"></i> Cart
+                                    <span id="cart-count"
+                                          class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                                          style="font-size: 0.75rem;">
+                                        @(
+                                            await _context.Carts
+                                            .Where(c => c.UserId == user.Id)
+                                            .Select(c => c.BookId)
+                                            .Distinct()
+                                            .CountAsync()
+                                            )
+                                    </span>
+                                </a>
+                            </li>
+                            <li class="sidebar-nav-item">
+                                <a asp-controller="Orders" asp-action="MyOrders"
+                                   class="sidebar-nav-link position-relative @(ViewData["Title"] == "My Orders" ? "active" : "")">
+                                    <i class="bi bi-box-seam"></i> My Orders
+                                    <span id="order-count"
+                                          class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                                          style="font-size: 0.75rem;">
+                                        @(
+                                            await _context.Orders
+                                            .Where(o => o.UserId == user.Id && !o.IsCancelled && o.Status != "Received")
+                                            .CountAsync()
+                                            )
+                                    </span>
+                                </a>
+                            </li>
+                        }
+                        <!-- NEW: White List -->
+                        <li class="sidebar-nav-item">
+                            <a asp-controller="Cart" asp-action="Whitelist"
+                               class="sidebar-nav-link @(ViewData["Title"] == "White List" ? "active" : "")">
+                                <i class="bi bi-list-check"></i> White List
+                            </a>
+                        </li>
+                    }
+                        <!-- Staff -->
+                        @if (isStaff)
+                        {
+                            <li class="sidebar-nav-item">
+                                <a asp-controller="Staff" asp-action="FulfillOrder"
+                                   class="sidebar-nav-link @(ViewData["Title"] == "Fulfill Order" ? "active" : "")">
+                                    <i class="bi bi-box-seam"></i> Orders
+                                <span id="whitelist-count"
+                                      class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                                      style="font-size: 0.75rem;">
+                                    @(
+                                        await _context.Whitelists
+                                        .Where(w => w.UserId == user.Id)
+                                        .CountAsync()
+                                        )
+                                </span>
+                                </a>
+                            </li>
+                        }
+                    
+                }
+            </ul>
+
+
+        </div>
+
+        <!-- Bottom Section - Sticky -->
+        <div class="sidebar-bottom">
+            <!-- Announcements -->
+            <div id="announcement-notice" class="mb-3">
+                <div id="notice-field" class="p-2 bg-dark rounded"></div>
+            </div>
+
+            <!-- User Profile -->
+            @if (SignInManager.IsSignedIn(User))
+            {
+                <div class="dropdown">
+                    <div class="user-profile" data-bs-toggle="dropdown">
+                        <div class="user-avatar">
+                            @if (!string.IsNullOrEmpty(user?.ProfileImageUrl))
+                            {
+                                <img src="@user.ProfileImageUrl" alt="@user.UserName" class="img-fluid">
+                            }
+                            else
+                            {
+                                <i class="bi bi-person-fill"></i>
+                            }
+                        </div>
+                        <div class="user-info">
+                            <div class="user-name">@user.FirstName</div>
+                            <div class="user-role">
+                                @(isAdmin ? "Administrator" : isStaff ? "Staff Member" : "Customer")
+                            </div>
+                        </div>
+                    </div>
+                    <ul class="dropdown-menu dropdown-menu-end mt-1">
+                        <li><a asp-controller="Profile" asp-action="ViewProfile" class="dropdown-item"><i class="bi bi-person me-2"></i> Profile</a></li>
+                        <li><a asp-controller="Profile" asp-action="Edit" class="dropdown-item"><i class="bi bi-pencil me-2"></i> Edit Profile</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a asp-controller="Account" asp-action="Logout" class="dropdown-item"><i class="bi bi-box-arrow-right me-2"></i> Logout</a></li>
+                    </ul>
+                </div>
+            }
+            else
+            {
+                <div class="d-grid gap-2">
+                    <a asp-controller="Account" asp-action="Login" class="btn btn-outline-teal btn-sm">Login</a>
+                    <a asp-controller="Account" asp-action="Register" class="btn btn-teal btn-sm">Register</a>
+                </div>
+            }
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content flex-fill">
+        <div class="container ">
+            @RenderBody()
+        </div>
+    </main>
+
+    <footer class="py-3">
+        <div class="container text-center text-sm">
+            <p>© 2025 Page Whispers. All rights reserved.</p>
+        </div>
+    </footer>
+
+
+    @Html.AntiForgeryToken()
+
+    @RenderSection("Scripts", required: false)
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    <script>
+        // Sidebar Toggle for Mobile
+        const sidebar = document.querySelector('.sidebar');
+        const mainContent = document.querySelector('.main-content');
+        const sidebarToggler = document.querySelector('.sidebar-toggler');
+        sidebarToggler.addEventListener('click', () => {
+            sidebar.classList.toggle('collapsed');
+            mainContent.classList.toggle('collapsed');
+        });
+
+        // SignalR Notification Logic
+        const connection = new signalR.HubConnectionBuilder().withUrl("/orderNotificationHub").build();
+        let timeoutId = null;
+        connection.on("ReceiveOrderNotification", (message) => {
+            const notificationContainer = document.getElementById("notification-container");
+            notificationContainer.textContent = message;
+            notificationContainer.style.display = "block";
+            notificationContainer.style.opacity = "1";
+            if (timeoutId) clearTimeout(timeoutId);
+            timeoutId = setTimeout(() => {
+                notificationContainer.style.opacity = "0";
+                setTimeout(() => notificationContainer.style.display = "none", 500);
+            }, 60000);
+        });
+        connection.on("UpdateCartCount", (count) => {
+            const cartCountElement = document.getElementById("cart-count");
+            if (cartCountElement) cartCountElement.textContent = count;
+        });
+        connection.on("UpdateOrderCount", (count) => {
+            const orderCountElement = document.getElementById("order-count");
+            if (cartCountElement) orderCountElement.textContent = count;
+        });
+        connection.start().catch(err => console.error("SignalR Connection Error: ", err));
+
+        // SignalR Announcement Notice Logic
+        const announcementConnection = new signalR.HubConnectionBuilder().withUrl("/announcementHub").build();
+        announcementConnection.on("ReceiveAnnouncement", (message) => {
+            const noticeField = document.getElementById("notice-field");
+            const messageElement = document.createElement("span");
+            messageElement.className = "message";
+            messageElement.textContent = message;
+            noticeField.appendChild(messageElement);
+            noticeField.parentElement.style.display = "block";
+        });
+        announcementConnection.start().catch(err => console.error("SignalR Announcement Connection Error: ", err));
+    </script>
+</body>
+</html>
